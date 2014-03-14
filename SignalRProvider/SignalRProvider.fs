@@ -26,12 +26,18 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let hubName (hubType : TypeInfo) =
         hubType.GetCustomAttribute<Microsoft.AspNet.SignalR.Hubs.HubNameAttribute>().HubName
 
+    let makeMethod (p: MethodInfo) =
+        let parms = p.GetParameters() |> Seq.map (fun p -> ProvidedParameter(p.Name, p.ParameterType))
+        let meth = ProvidedMethod(p.Name, parms |> List.ofSeq, typeof<string>)//p.ReturnType)
+        meth.AddMethodAttrs(MethodAttributes.Static)
+        meth.InvokeCode <- (fun args -> <@@ String.concat "|" [ ( %%args.[0] ).ToString(); ( %%args.[1] ).ToString() ]  @@> )
+        meth
+
     let makeHubType hubType =
         let name = hubName hubType
         let props = 
-            hubType.DeclaredProperties
-            |> Seq.map (fun p -> p.Name)
-            |> Seq.map (fun p -> ProvidedProperty(name, typeof<string>, IsStatic = true, GetterCode = (fun args -> <@@ "Hello world " @@>)))
+            hubType.DeclaredMethods
+            |> Seq.map makeMethod  //GetterCode = (fun args -> <@@ "Hello world " @@>)))
         let ty = ProvidedTypeDefinition(asm, ns, name, Some typeof<obj>)
         props |> Seq.iter (fun prop -> ty.AddMember prop)
         ty
