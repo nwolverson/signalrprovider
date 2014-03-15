@@ -60,6 +60,9 @@
     <Reference Include="FunScript.TypeScript.Binding.jquery">
       <HintPath>..\..\signalrproviderexample\packages\FunScript.TypeScript.Binding.jquery.1.1.0.13\lib\net40\FunScript.TypeScript.Binding.jquery.dll</HintPath>
     </Reference>
+    <Reference Include="FunScript.TypeScript.Binding.lib">
+      <HintPath>..\..\signalrproviderexample\packages\FunScript.TypeScript.Binding.lib.1.1.0.13\lib\net40\FunScript.TypeScript.Binding.lib.dll</HintPath>
+    </Reference>
     <Reference Include="FunScript.TypeScript.Binding.signalr">
       <HintPath>..\..\signalrproviderexample\packages\FunScript.TypeScript.Binding.signalr.1.1.0.13\lib\net40\FunScript.TypeScript.Binding.signalr.dll</HintPath>
     </Reference>

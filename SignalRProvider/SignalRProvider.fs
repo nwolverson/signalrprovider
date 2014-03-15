@@ -4,6 +4,10 @@ open ProviderImplementation.ProvidedTypes
 open Microsoft.FSharp.Core.CompilerServices
 open System.Reflection
 
+open Microsoft.FSharp.Quotations
+open Microsoft.FSharp.Quotations.Patterns
+open Microsoft.FSharp.Quotations.DerivedPatterns
+
 [<TypeProvider>]
 type ClientProvider (config: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces ()
@@ -28,23 +32,18 @@ type ClientProvider (config: TypeProviderConfig) as this =
 
     let makeMethod (hubName : string) (mi: MethodInfo) =
         let name = mi.Name
-        let parms = mi.GetParameters() |> Seq.map (fun p -> ProvidedParameter(p.Name, (* p.ParameterType *) typeof<obj>))
-        let meth = ProvidedMethod(name, parms |> List.ofSeq, typeof<unit>) // all  obj for now
-         //p.ReturnType)
-        
+        let parms = mi.GetParameters() |> Seq.map (fun p -> ProvidedParameter(p.Name,  p.ParameterType (* typeof<obj> *)))
+        let meth = ProvidedMethod(name, parms |> List.ofSeq, typeof<JQueryDeferred<obj>> ) // all  obj for now
+
+        let castParam i (e: Expr) = Expr.Coerce(e, typeof<obj> )
+
         meth.InvokeCode <- (fun args -> 
-            let argsArray = 
-                args 
-                |> Seq.skip 1 
-                |> Seq.fold (fun s x -> <@@ (%%x)::(%%s) @@> ) <@@ [] @@> 
-            let code = 
-                <@@ 
-                    let conn = ( %%args.[0] : obj) :?> HubConnection
-                    let proxy = conn.createHubProxy(hubName)
-                    let arguments = (%%argsArray : obj list) |> Array.ofList
-                    proxy.invoke(name, (arguments : obj array) ) |> ignore
-                @@>
-            code)
+            let argsArray = Expr.NewArray(typeof<obj>, args |> Seq.skip 1 |> Seq.mapi castParam |> List.ofSeq)
+
+            let objExpr = <@@ let conn = ( %%args.[0] : obj) :?> HubConnection
+                              conn.createHubProxy(hubName) @@>
+
+            <@@ (%%objExpr : HubProxy).invoke(name, (%%argsArray: obj array)) @@> )
 
         meth
 
