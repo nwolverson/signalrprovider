@@ -54,8 +54,15 @@
     <Compile Include="ProvidedTypes\Code\Debug.fs" />
     <Compile Include="SignalRProvider.fs" />
     <None Include="packages.config" />
+    <None Include="Script1.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FunScript.TypeScript.Binding.jquery">
+      <HintPath>..\..\signalrproviderexample\packages\FunScript.TypeScript.Binding.jquery.1.1.0.13\lib\net40\FunScript.TypeScript.Binding.jquery.dll</HintPath>
+    </Reference>
+    <Reference Include="FunScript.TypeScript.Binding.signalr">
+      <HintPath>..\..\signalrproviderexample\packages\FunScript.TypeScript.Binding.signalr.1.1.0.13\lib\net40\FunScript.TypeScript.Binding.signalr.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core">
       <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.0.2\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
       <Private>True</Private>
