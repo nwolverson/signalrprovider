@@ -33,25 +33,41 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let makeMethod (hubName : string) (mi: MethodInfo) =
         let name = mi.Name
         let parms = mi.GetParameters() |> Seq.map (fun p -> ProvidedParameter(p.Name,  p.ParameterType (* typeof<obj> *)))
-        let meth = ProvidedMethod(name, parms |> List.ofSeq, typeof<JQueryDeferred<obj>> ) // all  obj for now
 
-        let castParam i (e: Expr) = Expr.Coerce(e, typeof<obj> )
+        let returnType = if mi.ReturnType.Equals(typeof<System.Void>) then typeof<unit> else mi.ReturnType
+        let deferType = typedefof<JQueryDeferred<_>>.MakeGenericType(returnType)
+
+        let objDeferType = typeof<JQueryDeferred<obj>>
+
+        let meth = ProvidedMethod(name, parms |> List.ofSeq, objDeferType)
+
+        let castParam (e: Expr) = Expr.Coerce(e, typeof<obj> )
+
+        //let unbox = match <@ 1 :> obj :?> int @> with Call(e, mi, es) -> mi
 
         meth.InvokeCode <- (fun args -> 
-            let argsArray = Expr.NewArray(typeof<obj>, args |> Seq.skip 1 |> Seq.mapi castParam |> List.ofSeq)
+            let argsArray = Expr.NewArray(typeof<obj>, args |> Seq.skip 1 |> Seq.map castParam |> List.ofSeq)
 
             let objExpr = <@@ let conn = ( %%args.[0] : obj) :?> HubConnection
                               conn.createHubProxy(hubName) @@>
 
-            <@@ (%%objExpr : HubProxy).invoke(name, (%%argsArray: obj array)) @@> )
+            let invokeExpr = <@@ (%%objExpr : HubProxy).invoke(name, (%%argsArray: obj array)) @@> 
+            //let objExpr = Expr.Coerce(invokeExpr, typeof<obj>)
+            //Expr.Call(unbox, [invokeExpr] )
 
+            //<@@ unbox ( (%%invokeExpr: JQueryDeferred<obj>) :> obj) @@>
+
+            invokeExpr
+            
+            )
+            
         meth
 
     let makeHubType hubType =
         let name = hubName hubType
         let props = 
             Microsoft.AspNet.SignalR.Hubs.ReflectionHelper.GetExportedHubMethods hubType
-            |> Seq.map (makeMethod name)  //GetterCode = (fun args -> <@@ "Hello world " @@>)))
+            |> Seq.map (makeMethod name) 
         let ty = ProvidedTypeDefinition(asm, ns, name, Some typeof<obj>)
         let ctor = ProvidedConstructor(parameters = [ ProvidedParameter("conn", typeof<HubConnection>) ], 
                     InvokeCode = (fun args -> <@@ (%%(args.[0]) : HubConnection) :> obj @@>))
