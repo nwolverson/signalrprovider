@@ -25,6 +25,10 @@ let jqIgnore x =
     null : obj
 
 let start () = 
+
+    serverHub.testUpdating3() |> ignore
+    serverHub.functionWith4Args(1, "2", new obj(), 5) |> ignore
+
     let intList1 = ([|1;2;3|] :> obj) :?> Underscore.List<int>
     let intList2 = ([|4;5;6|] :> obj) :?> Underscore.List<int>
 
@@ -39,7 +43,7 @@ let start () =
         serverHub.MyCustomServerFunction(j("#source")._val() :?> string)
         )
     |> ignore
-    log "Started!"
+    log "##Started!##"
 
 let printResult (value : string) =
     //sprintf "<p>%s</p>" value
@@ -48,7 +52,7 @@ let printResult (value : string) =
     |> ignore
 
 let main() = 
-    Globals.console.log("Starting: ")
+    Globals.console.log("##Starting:## ")
     signalR.hub.url <- "/signalrHub"
 
     proxy.on("myCustomClientFunction", fun args -> 

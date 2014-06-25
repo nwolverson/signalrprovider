@@ -45,7 +45,10 @@ module MyServer =
                 let (t:Task) = this.Clients.Caller?myCustomClientFunction("Cheers for '" + fromClient + "'")
                 t.Wait()
 
-        member this.functionWith3Args(x : int, y: string, z: obj) = 42.0
+        member this.functionWith3Args(x : int, y: string, z: obj) = 42.0 + 0.0
+        member this.functionWith4Args(xx : int, y: string, z: obj, a: int) = 42
+
+        member this.testUpdating3() = false
 
         override x.OnConnected() =
             base.OnConnected()

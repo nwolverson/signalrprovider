@@ -3,10 +3,18 @@
 open ProviderImplementation.ProvidedTypes
 open Microsoft.FSharp.Core.CompilerServices
 open System.Reflection
+open System
 
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
+
+open Microsoft.AspNet.SignalR.Hubs
+open Microsoft.AspNet.SignalR
+
+open  System.IO
+
+open ReflectionProxy
 
 [<TypeProvider>]
 type ClientProvider (config: TypeProviderConfig) as this =
@@ -17,29 +25,59 @@ type ClientProvider (config: TypeProviderConfig) as this =
 
     let myType = ProvidedTypeDefinition(asm, ns, "MyType", Some typeof<obj>)
 
-    // TODO - use all?
-    let clientAsm =
-        let lastref = config.ReferencedAssemblies |> Seq.last
-        let refAsm = Assembly.LoadFrom lastref
-        refAsm
+    let loadAssembliesBytes() =
+        let ass = config.ReferencedAssemblies |> Seq.last
 
-    let hubs = 
-        clientAsm.DefinedTypes
-        |> Seq.filter (fun t -> t.GetCustomAttributes<Microsoft.AspNet.SignalR.Hubs.HubNameAttribute>() |> Seq.isEmpty |> not )
+        let resolve (o: obj) (args: ResolveEventArgs) = 
+            let name = AssemblyName(args.Name).Name
+            try
+                Assembly.Load args.Name
+            with
+                | _ -> Assembly.LoadFrom <| Path.Combine(Path.GetDirectoryName ass, name + ".dll")
 
-    let hubName (hubType : TypeInfo) =
-        hubType.GetCustomAttribute<Microsoft.AspNet.SignalR.Hubs.HubNameAttribute>().HubName
+        AppDomain.CurrentDomain.add_AssemblyResolve (ResolveEventHandler resolve)
+        
+        ass
+        |> File.ReadAllBytes 
+        |> Assembly.Load
 
-    let makeMethod (hubName : string) (mi: MethodInfo) =
-        let name = mi.Name
-        let parms = mi.GetParameters() |> Seq.map (fun p -> ProvidedParameter(p.Name,  p.ParameterType (* typeof<obj> *)))
+    
+    let hubAttrs (t: TypeInfo) = 
+        CustomAttributeData.GetCustomAttributes(t)
+        |> Seq.filter (fun attr -> attr.AttributeType.FullName = "Microsoft.AspNet.SignalR.Hubs.HubNameAttribute")
 
-        let returnType = if mi.ReturnType.Equals(typeof<System.Void>) then typeof<unit> else mi.ReturnType
+    let arg = config.ReferencedAssemblies |> Seq.ofArray
+
+    let dir1 = config.ReferencedAssemblies |> Seq.last |> Path.GetDirectoryName
+    let dirCode = Assembly.GetExecutingAssembly().Location |> Path.GetDirectoryName
+    let appDomain = AppDomain.CreateDomain("signalRprovider", null, new AppDomainSetup(ShadowCopyFiles="false",DisallowApplicationBaseProbing=true))
+    
+    let dll = @"C:\Users\Nicholas\Documents\git\signalrprovider\SignalRProvider\bin\Debug\ReflectionProxy.dll"
+    let cls = "ReflectionProxy.ReflectionProxy"
+    let obj = appDomain.CreateInstanceFromAndUnwrap(dll, cls) 
+
+    let resolve (o: obj) (args: ResolveEventArgs) = Assembly.LoadFrom dll
+
+    let handler = ResolveEventHandler resolve
+    do AppDomain.CurrentDomain.add_AssemblyResolve handler
+
+    let ret = obj.GetType().InvokeMember("GetDefinedTypes", System.Reflection.BindingFlags.InvokeMethod, Type.DefaultBinder, obj, [| arg |]) 
+
+    do AppDomain.CurrentDomain.remove_AssemblyResolve handler
+    do AppDomain.Unload(appDomain)
+
+    let makeMethodType hubName (name, args, ret) =
+        let args = args |> Seq.map (fun (name, ty) -> ProvidedParameter(name, Type.GetType(ty)))
+        let returnType = 
+            if (typeof<unit>.FullName = ret) then typeof<unit>
+            else if (typeof<System.Void>.FullName = ret) then typeof<unit>
+            else Type.GetType(ret)
+
         let deferType = typedefof<JQueryDeferred<_>>.MakeGenericType(returnType)
 
         let objDeferType = typeof<JQueryDeferred<obj>>
 
-        let meth = ProvidedMethod(name, parms |> List.ofSeq, objDeferType)
+        let meth = ProvidedMethod(name, args |> List.ofSeq, objDeferType)
 
         let castParam (e: Expr) = Expr.Coerce(e, typeof<obj> )
 
@@ -52,37 +90,29 @@ type ClientProvider (config: TypeProviderConfig) as this =
                               conn.createHubProxy(hubName) @@>
 
             let invokeExpr = <@@ (%%objExpr : HubProxy).invoke(name, (%%argsArray: obj array)) @@> 
-            //let objExpr = Expr.Coerce(invokeExpr, typeof<obj>)
-            //Expr.Call(unbox, [invokeExpr] )
 
-            //<@@ unbox ( (%%invokeExpr: JQueryDeferred<obj>) :> obj) @@>
-
-            invokeExpr
-            
-            )
+            invokeExpr)
             
         meth
 
-    let makeHubType hubType =
-        let name = hubName hubType
-        let props = 
-            Microsoft.AspNet.SignalR.Hubs.ReflectionHelper.GetExportedHubMethods hubType
-            |> Seq.map (makeMethod name) 
+    let makeHubType (name, methodTypeInfo) =
+        let methodDefinedTypes = methodTypeInfo |> Seq.map (makeMethodType name)
+        
         let ty = ProvidedTypeDefinition(asm, ns, name, Some typeof<obj>)
         let ctor = ProvidedConstructor(parameters = [ ProvidedParameter("conn", typeof<HubConnection>) ], 
                     InvokeCode = (fun args -> <@@ (%%(args.[0]) : HubConnection) :> obj @@>))
         ty.AddMember ctor
-        props |> Seq.iter (fun prop -> ty.AddMember prop)
+        Seq.iter ty.AddMember methodDefinedTypes 
         ty
 
-    let hubTypes = 
-        hubs
-        |> Seq.map makeHubType
-        |> Seq.toList
+    // Ugh.. not taking a dependency on the DLL
+    let typeInfo = ret :?> list<string * list<string * list<string * string> * string>>
+
+    let definedTypes = typeInfo |> List.map makeHubType
 
     do
         this.RegisterRuntimeAssemblyLocationAsProbingFolder(config)
-        this.AddNamespace(ns, hubTypes)
+        this.AddNamespace(ns, definedTypes)
 
 [<assembly:TypeProviderAssembly>]
 do ()
