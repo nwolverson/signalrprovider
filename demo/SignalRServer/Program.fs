@@ -14,32 +14,10 @@ open Dynamic
 open TaskHelper
 open System.Threading.Tasks
 
-module Common =
-    type IMyHub =
-        abstract member MyCustomServerFunction: string -> unit
-
 module MyServer =
-    open Common
-
-    //SignalR supports two kinds of connections: Hub and PersistentConnection
-
-    type MyConnection() as this = 
-        inherit PersistentConnection()
-        override x.OnConnected(req,id) =
-            this.Connection.Send(id, "Welcome!") |> ignore
-            base.OnConnected(req,id)
-        override x.OnReceived(req,id,data) =
-            this.Connection.Send(id, "Cheers for " + data) |> ignore
-            base.OnReceived(req,id,data)
-
-    
-
     [<HubName("myhub")>]
     type MyHub() as this = 
         inherit Hub()
-
-        interface IMyHub with
-            member x.MyCustomServerFunction s = this.MyCustomServerFunction s
 
         member x.MyCustomServerFunction(fromClient : string) : unit =
                 let (t:Task) = this.Clients.Caller?myCustomClientFunction("Cheers for '" + fromClient + "'")
@@ -52,25 +30,7 @@ module MyServer =
 
         override x.OnConnected() =
             base.OnConnected()
-        // Define the MyCustomServerFunction on the server.
-        
-
-    let sendAll msg = 
-            GlobalHost.ConnectionManager.GetConnectionContext<MyConnection>().Connection.Broadcast(msg) 
-                |> Async.awaitPlainTask |> ignore
-            GlobalHost.ConnectionManager.GetHubContext<MyHub>().Clients.All?myCustomClientFunction(msg)
-                |> Async.awaitPlainTask |> ignore
             
-
-    //Send some responses from server to client...
-    let SignalRCommunicationSendPings() =
-
-        //Send first message
-        sendAll("Hello world!")
-
-        //Send ping on every 5 seconds
-        let pings = Observable.Interval(TimeSpan.FromSeconds(5.0), Scheduler.Default)
-        pings.Subscribe(fun s -> sendAll("ping!")) |> ignore
 
 //------------------------------------------------------------------------------------------------------------
 // Options of hosting:
@@ -92,11 +52,8 @@ module MyServer =
 
     type MyWebStartup() =
         member x.Configuration(app:Owin.IAppBuilder) =
-            Owin.OwinExtensions.MapSignalR<MyConnection>(app, "/signalrConn") |> ignore
-
             Owin.OwinExtensions.MapSignalR(app, "/signalrHub", config) |> ignore
-            //SignalRCommunicationSendPings()
-            ()
+            
 
     [<assembly: Microsoft.Owin.OwinStartup(typeof<MyWebStartup>)>]
     do()

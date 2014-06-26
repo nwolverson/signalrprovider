@@ -9,8 +9,7 @@ open System.IO
 
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
-let hub = signalR.hub
-let proxy = hub.createHubProxy("myHub")
+let proxy = signalR.hub.createHubProxy("myHub")
 let log = Globals.console.log
 
 let serverHub = new Hubs.myhub(signalR.hub)
@@ -61,7 +60,7 @@ let main() =
         "Response: " + s |> log) 
     |> ignore
 
-    hub.start start
+    signalR.hub.start start
 
 type Wrapper() =
     member this.GenerateScript() = Compiler.compileWithoutReturn <@ main() @>
