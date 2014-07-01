@@ -5,10 +5,10 @@ open Microsoft.AspNet.SignalR.Hubs
 
 open System
 open System.Runtime
-open System.Reactive.Concurrency
-open System.Reactive.Linq
 open System.Web
 open System.Web.Routing
+
+open Microsoft.Owin
 
 open Dynamic
 open TaskHelper

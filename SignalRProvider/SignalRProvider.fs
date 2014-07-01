@@ -12,9 +12,12 @@ open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.AspNet.SignalR.Hubs
 open Microsoft.AspNet.SignalR
 
-open  System.IO
+open System.IO
 
 open ReflectionProxy
+
+open FunScript.TypeScript
+
 
 [<TypeProvider>]
 type ClientProvider (config: TypeProviderConfig) as this =
@@ -52,7 +55,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let dirCode = Assembly.GetExecutingAssembly().Location |> Path.GetDirectoryName
     let appDomain = AppDomain.CreateDomain("signalRprovider", null, new AppDomainSetup(ShadowCopyFiles="false",DisallowApplicationBaseProbing=true))
     
-    let dll = @"C:\Users\Nicholas\Documents\git\signalrprovider\SignalRProvider\bin\Debug\ReflectionProxy.dll"
+    let dll = Path.Combine(dirCode, "ReflectionProxy.dll")
     let cls = "ReflectionProxy.ReflectionProxy"
     let obj = appDomain.CreateInstanceFromAndUnwrap(dll, cls) 
 
@@ -89,7 +92,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
             let objExpr = <@@ let conn = ( %%args.[0] : obj) :?> HubConnection
                               conn.createHubProxy(hubName) @@>
 
-            let invokeExpr = <@@ (%%objExpr : HubProxy).invoke(name, (%%argsArray: obj array)) @@> 
+            let invokeExpr = <@@ (%%objExpr : HubProxy).invokeOverload2(name, (%%argsArray: obj array)) @@> 
 
             invokeExpr)
             

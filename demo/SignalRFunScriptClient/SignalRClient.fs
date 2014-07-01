@@ -3,7 +3,9 @@ module SignalRClient
 
 open SignalRProvider
 
+open FunScript.TypeScript
 open FunScript
+
 open FSharp.Data
 open System.IO
 
@@ -15,8 +17,9 @@ let log = Globals.console.log
 let serverHub = new Hubs.myhub(signalR.hub)
 
 let logDeferred s (df: JQueryDeferred<_>) =
-    df._done (fun _ -> log <| s + "done") |> ignore
-    df.fail (fun _ -> log <| s + "fail") |> ignore
+
+    df._doneOverload2 (fun _ -> log <| s + "done") |> ignore
+    df.failOverload2 (fun _ -> log <| s + "fail") |> ignore
     ()
 
 let jqIgnore x = 
@@ -31,15 +34,17 @@ let start () =
     let intList1 = ([|1;2;3|] :> obj) :?> Underscore.List<int>
     let intList2 = ([|4;5;6|] :> obj) :?> Underscore.List<int>
 
-    let u = Globals.Underscore<int>([|1|]).union(intList1, intList2)
+    
+    let u = Globals.Underscore.Invoke<int>([|1|]).unionOverload2(intList1, intList2)
 
     let argss = [| intList1; intList2 |]
-    let v = Globals.Underscore<int>([|1|]).union( argss )
-    let w = Globals.Underscore<int>([|1|]).union( [| intList1; intList2 |] )
+    let v = Globals.Underscore.Invoke<int>([|1|]).unionOverload2 argss 
+    let w = Globals.Underscore.Invoke<int>([|1|]).unionOverload2  [| intList1; intList2 |] 
 
     j("#submit").click (fun _ -> 
-        serverHub.functionWith3Args(1, "2", 3)._done( fun (x: obj) -> log <| x.ToString() ) |> ignore
-        serverHub.MyCustomServerFunction(j("#source")._val() :?> string)
+        serverHub.functionWith3Args(1, "2", 3)._doneOverload2( fun (x: obj) -> log <| x.ToString() ) |> ignore
+        serverHub.MyCustomServerFunction(j("#source")._val() :?> string) |> ignore
+        new obj()
         )
     |> ignore
     log "##Started!##"
