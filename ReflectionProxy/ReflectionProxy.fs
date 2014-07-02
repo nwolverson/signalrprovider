@@ -25,11 +25,8 @@ type ReflectionProxy() =
     let getMethodType (hubName : string) (mi: MethodInfo) =
         let name = mi.Name
         let parms = mi.GetParameters() |> Seq.map (fun p -> (p.Name,  p.ParameterType (* typeof<obj> *)))
-
         let returnType = if mi.ReturnType.Equals(typeof<System.Void>) then typeof<unit> else mi.ReturnType
-
-        let methTy = (name, parms, returnType)
-        methTy
+        (name, parms, returnType)
     
     // whatever version
     let nameHubNameAttr = "Microsoft.AspNet.SignalR.Hubs.HubNameAttribute"
@@ -37,16 +34,12 @@ type ReflectionProxy() =
     let nameHub = "Microsoft.AspNet.SignalR.Hubs.HHub"
 
     let hubAttrs (t: Type) = 
-        //CustomAttributeData.GetCustomAttributes(t)
         t.GetCustomAttributes()
-
         |> Seq.filter (fun attr -> attr.GetType().FullName = nameHubNameAttr)
 
     let hubName (hubType : Type) = 
         let attr = hubAttrs hubType |> Seq.head
         attr.GetType().GetProperty("HubName").GetValue(attr) :?> string
-        //CustomAttributeData. .GetType() ConstructorArguments.[0].Value :?> string
-
 
     let makeHubType hubType =
         let name = hubName hubType
@@ -56,9 +49,6 @@ type ReflectionProxy() =
         let excludeInterfaces = [ nameIHub; typeof<IDisposable>.FullName]
 
         let findty tname = hubType.GetTypeInfo().ImplementedInterfaces |> Seq.find (fun i -> i.FullName = tname)
-        //todo unused
-        let ihubty = findty nameIHub
-        let idispty = findty typeof<IDisposable>.FullName
 
         let exclude (m: MethodInfo) =
             m.IsSpecialName 
@@ -86,11 +76,9 @@ type ReflectionProxy() =
     member this.GetDefinedTypes(assemblies : string seq) 
         : List<string * List<string * List<string * string> * string>> = 
         let clientAsm = loadAssembliesBytes assemblies
-        let deftypes1 = clientAsm.ExportedTypes
-        let defTypes = clientAsm.DefinedTypes
-        //let infos = defTypes |> Seq.map (fun t -> t.GetTypeInfo()) |> List.ofSeq
-        let hubs = deftypes1 |> List.ofSeq|> findHubs
-        let hubTypes = hubs |> List.map makeHubType
-        hubTypes
+        clientAsm.ExportedTypes
+            |> List.ofSeq 
+            |> findHubs
+            |> List.map makeHubType
         
 

@@ -1,23 +1,19 @@
 ﻿module SignalRProvider
 
+open System.IO
 open ProviderImplementation.ProvidedTypes
+
 open Microsoft.FSharp.Core.CompilerServices
 open System.Reflection
 open System
-
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
 
+open FunScript.TypeScript
 open Microsoft.AspNet.SignalR.Hubs
 open Microsoft.AspNet.SignalR
-
-open System.IO
-
 open ReflectionProxy
-
-open FunScript.TypeScript
-
 
 [<TypeProvider>]
 type ClientProvider (config: TypeProviderConfig) as this =
@@ -26,52 +22,16 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let ns = "SignalRProvider.Hubs"
     let asm = Assembly.GetExecutingAssembly()
 
-    let myType = ProvidedTypeDefinition(asm, ns, "MyType", Some typeof<obj>)
-
-    let loadAssembliesBytes() =
-        let ass = config.ReferencedAssemblies |> Seq.last
-
-        let resolve (o: obj) (args: ResolveEventArgs) = 
-            let name = AssemblyName(args.Name).Name
-            try
-                Assembly.Load args.Name
-            with
-                | _ -> Assembly.LoadFrom <| Path.Combine(Path.GetDirectoryName ass, name + ".dll")
-
-        AppDomain.CurrentDomain.add_AssemblyResolve (ResolveEventHandler resolve)
-        
-        ass
-        |> File.ReadAllBytes 
-        |> Assembly.Load
-
-    
-    let hubAttrs (t: TypeInfo) = 
-        CustomAttributeData.GetCustomAttributes(t)
-        |> Seq.filter (fun attr -> attr.AttributeType.FullName = "Microsoft.AspNet.SignalR.Hubs.HubNameAttribute")
-
-    let arg = config.ReferencedAssemblies |> Seq.ofArray
-
-    let dir1 = config.ReferencedAssemblies |> Seq.last |> Path.GetDirectoryName
-    let dirCode = Assembly.GetExecutingAssembly().Location |> Path.GetDirectoryName
     let appDomain = AppDomain.CreateDomain("signalRprovider", null, new AppDomainSetup(ShadowCopyFiles="false",DisallowApplicationBaseProbing=true))
+    let dll = typeof<ReflectionProxy>.Assembly.Location
     
-    let dll = Path.Combine(dirCode, "ReflectionProxy.dll")
-    let cls = "ReflectionProxy.ReflectionProxy"
-    let obj = appDomain.CreateInstanceFromAndUnwrap(dll, cls) 
+    let obj = appDomain.CreateInstanceFromAndUnwrap(dll, typeof<ReflectionProxy>.FullName) 
 
-    let resolve (o: obj) (args: ResolveEventArgs) = Assembly.LoadFrom dll
-
-    let handler = ResolveEventHandler resolve
+    let handler = ResolveEventHandler (fun _ _ -> Assembly.LoadFrom dll)
     do AppDomain.CurrentDomain.add_AssemblyResolve handler
 
-    let rp = obj :?> ReflectionProxy.ReflectionProxy
-
-    let m1 = obj.GetType().GetRuntimeMethods()|> Seq.map (fun (f : MethodInfo) -> f.Name) 
-    let meths = obj.GetType().GetMethods(BindingFlags.Instance ||| BindingFlags.Public ||| BindingFlags.FlattenHierarchy) |> Array.map (fun (f : MethodInfo) -> f.Name) 
-    let msg = String.Join(", ", m1)
-
-    let ret = rp.GetDefinedTypes(arg)
-    //let ret = obj.GetType().InvokeMember("GetDefinedTypes", System.Reflection.BindingFlags.InvokeMethod ||| System.Reflection.BindingFlags.Instance ||| System.Reflection.BindingFlags.Public, Type.DefaultBinder, obj, [| arg |]) 
+    let rp = obj :?> ReflectionProxy
+    let ret = rp.GetDefinedTypes(config.ReferencedAssemblies)
 
     do AppDomain.CurrentDomain.remove_AssemblyResolve handler
     do AppDomain.Unload(appDomain)
@@ -115,9 +75,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
         Seq.iter ty.AddMember methodDefinedTypes 
         ty
 
-    // Ugh.. not taking a dependency on the DLL
-    let typeInfo = ret //:?> list<string * list<string * list<string * string> * string>>
-
+    let typeInfo = ret
     let definedTypes = typeInfo |> List.map makeHubType
 
     do
