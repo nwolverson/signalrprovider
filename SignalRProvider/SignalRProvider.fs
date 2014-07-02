@@ -64,7 +64,14 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let handler = ResolveEventHandler resolve
     do AppDomain.CurrentDomain.add_AssemblyResolve handler
 
-    let ret = obj.GetType().InvokeMember("GetDefinedTypes", System.Reflection.BindingFlags.InvokeMethod, Type.DefaultBinder, obj, [| arg |]) 
+    let rp = obj :?> ReflectionProxy.ReflectionProxy
+
+    let m1 = obj.GetType().GetRuntimeMethods()|> Seq.map (fun (f : MethodInfo) -> f.Name) 
+    let meths = obj.GetType().GetMethods(BindingFlags.Instance ||| BindingFlags.Public ||| BindingFlags.FlattenHierarchy) |> Array.map (fun (f : MethodInfo) -> f.Name) 
+    let msg = String.Join(", ", m1)
+
+    let ret = rp.GetDefinedTypes(arg)
+    //let ret = obj.GetType().InvokeMember("GetDefinedTypes", System.Reflection.BindingFlags.InvokeMethod ||| System.Reflection.BindingFlags.Instance ||| System.Reflection.BindingFlags.Public, Type.DefaultBinder, obj, [| arg |]) 
 
     do AppDomain.CurrentDomain.remove_AssemblyResolve handler
     do AppDomain.Unload(appDomain)
@@ -109,7 +116,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
         ty
 
     // Ugh.. not taking a dependency on the DLL
-    let typeInfo = ret :?> list<string * list<string * list<string * string> * string>>
+    let typeInfo = ret //:?> list<string * list<string * list<string * string> * string>>
 
     let definedTypes = typeInfo |> List.map makeHubType
 

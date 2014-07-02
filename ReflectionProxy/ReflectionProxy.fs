@@ -36,13 +36,16 @@ type ReflectionProxy() =
     let nameIHub = "Microsoft.AspNet.SignalR.Hubs.IHub"
     let nameHub = "Microsoft.AspNet.SignalR.Hubs.HHub"
 
-    let hubAttrs (t: TypeInfo) = 
-        CustomAttributeData.GetCustomAttributes(t)
-        |> Seq.filter (fun attr -> attr.AttributeType.FullName = nameHubNameAttr)
+    let hubAttrs (t: Type) = 
+        //CustomAttributeData.GetCustomAttributes(t)
+        t.GetCustomAttributes()
 
-    let hubName (hubType : TypeInfo) = 
+        |> Seq.filter (fun attr -> attr.GetType().FullName = nameHubNameAttr)
+
+    let hubName (hubType : Type) = 
         let attr = hubAttrs hubType |> Seq.head
-        attr.ConstructorArguments.[0].Value :?> string
+        attr.GetType().GetProperty("HubName").GetValue(attr) :?> string
+        //CustomAttributeData. .GetType() ConstructorArguments.[0].Value :?> string
 
 
     let makeHubType hubType =
@@ -52,7 +55,7 @@ type ReflectionProxy() =
         let excludeTypes = [ nameHub; typeof<obj>.FullName ]
         let excludeInterfaces = [ nameIHub; typeof<IDisposable>.FullName]
 
-        let findty tname = hubType.ImplementedInterfaces |> Seq.find (fun i -> i.FullName = tname)
+        let findty tname = hubType.GetTypeInfo().ImplementedInterfaces |> Seq.find (fun i -> i.FullName = tname)
         //todo unused
         let ihubty = findty nameIHub
         let idispty = findty typeof<IDisposable>.FullName
@@ -83,9 +86,10 @@ type ReflectionProxy() =
     member this.GetDefinedTypes(assemblies : string seq) 
         : List<string * List<string * List<string * string> * string>> = 
         let clientAsm = loadAssembliesBytes assemblies
+        let deftypes1 = clientAsm.ExportedTypes
         let defTypes = clientAsm.DefinedTypes
-        let infos = defTypes |> Seq.map (fun t -> t.GetTypeInfo()) |> List.ofSeq
-        let hubs = infos |> findHubs
+        //let infos = defTypes |> Seq.map (fun t -> t.GetTypeInfo()) |> List.ofSeq
+        let hubs = deftypes1 |> List.ofSeq|> findHubs
         let hubTypes = hubs |> List.map makeHubType
         hubTypes
         
