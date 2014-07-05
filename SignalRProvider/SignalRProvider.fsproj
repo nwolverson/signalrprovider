@@ -94,7 +94,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ReflectionProxy\ReflectionProxy.fsproj">
       <Name>ReflectionProxy</Name>
-      <Project>0007D4AE-886A-4D14-A392-EDAA86B00581</Project>
+      <Project>{0007d4ae-886a-4d14-a392-edaa86b00581}</Project>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

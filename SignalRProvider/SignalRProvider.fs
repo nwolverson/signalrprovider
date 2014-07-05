@@ -13,6 +13,7 @@ open Microsoft.FSharp.Quotations.DerivedPatterns
 open FunScript.TypeScript
 open Microsoft.AspNet.SignalR.Hubs
 open Microsoft.AspNet.SignalR
+
 open ReflectionProxy
 
 [<TypeProvider>]
@@ -36,12 +37,31 @@ type ClientProvider (config: TypeProviderConfig) as this =
     do AppDomain.CurrentDomain.remove_AssemblyResolve handler
     do AppDomain.Unload(appDomain)
 
-    let makeMethodType hubName (name, args, ret) =
-        let args = args |> Seq.map (fun (name, ty) -> ProvidedParameter(name, Type.GetType(ty)))
+    let typeNs = "SignalRProvider.Types"
+    let types = new System.Collections.Generic.List<ProvidedTypeDefinition>()
+
+    let makeMethodType hubName (name, args, ret:obj) =
+        let rec getTy (ty: obj) = 
+            match ty with
+            | :? string as t -> Type.GetType(t)
+            | :? (string * (string * obj) list) as complex -> 
+                let (typeName, l) = complex
+                let newTypeName = typeName.Replace('.', '!') // collapse namespaces but keep the full name
+                let typeDef = ProvidedTypeDefinition(asm, typeNs, newTypeName, Some typeof<obj>) 
+                typeDef.AddMembers(l |> List.map (fun (pName, pTy) -> 
+                    let p = ProvidedProperty(pName, getTy pTy, SetterCode = (fun args -> <@@ () @@>), GetterCode = (fun args -> <@@ () @@>))
+                    p))
+                typeDef.AddMember <| ProvidedConstructor([], InvokeCode =  (fun args -> <@@ new obj() @@>))
+
+                types.Add(typeDef)
+                upcast typeDef
+
+
+        let args = args |> Seq.map (fun (name, ty) -> ProvidedParameter(name, getTy ty))
         let returnType = 
-            if (typeof<unit>.FullName = ret) then typeof<unit>
-            else if (typeof<System.Void>.FullName = ret) then typeof<unit>
-            else Type.GetType(ret)
+            if (typeof<unit>.FullName = (ret :?> string)) then typeof<unit>
+            else if (typeof<System.Void>.FullName = (ret:?> string)) then typeof<unit>
+            else getTy(ret)
 
         let deferType = typedefof<JQueryDeferred<_>>.MakeGenericType(returnType)
 
@@ -75,12 +95,13 @@ type ClientProvider (config: TypeProviderConfig) as this =
         Seq.iter ty.AddMember methodDefinedTypes 
         ty
 
-    let typeInfo = ret
+    let typeInfo = ret  
     let definedTypes = typeInfo |> List.map makeHubType
 
     do
         this.RegisterRuntimeAssemblyLocationAsProbingFolder(config)
         this.AddNamespace(ns, definedTypes)
+        this.AddNamespace(typeNs, types |> List.ofSeq)
 
 [<assembly:TypeProviderAssembly>]
 do ()

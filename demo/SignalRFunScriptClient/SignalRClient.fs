@@ -9,6 +9,11 @@ open FunScript
 open FSharp.Data
 open System.IO
 
+type t = int * string
+
+
+type complexType = SignalRProvider.Types.``SignalRServer!MyServer+ComplexObject``
+
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
 let proxy = signalR.hub.createHubProxy("myHub")
@@ -26,10 +31,22 @@ let jqIgnore x =
     x
     null : obj
 
+type ComplexLocalType() =
+    member val XX = 42 with get,set
+    member val YY = "abc" with get,set
+
 let start () = 
 
     serverHub.testUpdating3() |> ignore
-    serverHub.functionWith4Args(1, "2", new obj(), 5) |> ignore
+    let arg = new complexType(Number=123) // (Number = 123, Text = "Test")
+    
+    let d = Map.empty.Add("a", 1)
+    let d1 = d.Add("b", 42)
+
+    let ay = d1.["a"]
+
+    serverHub.functionWith4Args(1, "2", arg, 5) |> ignore
+    //serverHub.complexArg()
 
     let intList1 = ([|1;2;3|] :> obj) :?> Underscore.List<int>
     let intList2 = ([|4;5;6|] :> obj) :?> Underscore.List<int>

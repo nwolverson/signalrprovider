@@ -15,6 +15,10 @@ open TaskHelper
 open System.Threading.Tasks
 
 module MyServer =
+    type ComplexObject() =
+        member val Number = 0 with get, set
+        member val Text = "" with get, set
+
     [<HubName("myhub")>]
     type MyHub() as this = 
         inherit Hub()
@@ -23,10 +27,12 @@ module MyServer =
                 let (t:Task) = this.Clients.Caller?myCustomClientFunction("Cheers for '" + fromClient + "'")
                 t.Wait()
 
-        member this.functionWith3Args(x : int, y: string, z: obj) = 42.0 + 0.0
-        member this.functionWith4Args(xx : int, y: string, z: obj, a: int) = 42
+        member this.functionWith3Args(x : int, y: string, z: int) = 42.0 
+        member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = 42
 
         member this.testUpdating3() = false
+
+        member this.complexArg(arg: ComplexObject) = arg.Number
 
         override x.OnConnected() =
             base.OnConnected()

@@ -41,6 +41,14 @@ type ReflectionProxy() =
         let attr = hubAttrs hubType |> Seq.head
         attr.GetType().GetProperty("HubName").GetValue(attr) :?> string
 
+    let rec encodeType (t: Type) = 
+        if t.IsPrimitive || List.exists (fun x -> x = t) [ typeof<unit>; typeof<DateTime>; typeof<string> ] then t.FullName :> obj
+        else 
+            let props = t.GetProperties(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getPropertyValue
+            let fields = t.GetFields(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getFieldValue            
+            (t.FullName,  props @ fields) :> obj
+    and getPropertyValue (pi: PropertyInfo) = (pi.Name, encodeType pi.PropertyType)
+    and getFieldValue (pi: FieldInfo) = (pi.Name, encodeType pi.FieldType)
     let makeHubType hubType =
         let name = hubName hubType
 
@@ -65,7 +73,7 @@ type ReflectionProxy() =
 
         let methTypeNames = 
             methTypes 
-            |> List.map (fun (name,args,retty) -> (name, args |> List.ofSeq |> List.map (fun (n,ty) -> (n, ty.FullName)), retty.FullName))
+            |> List.map (fun (name,args,retty) -> (name, args |> List.ofSeq |> List.map (fun (n,ty) -> (n, encodeType ty)), encodeType retty))
 
         (name, methTypeNames)
 
@@ -74,7 +82,7 @@ type ReflectionProxy() =
         List.filter hasHubAttribute hubs
 
     member this.GetDefinedTypes(assemblies : string seq) 
-        : List<string * List<string * List<string * string> * string>> = 
+        : List<string * List<string * List<string * obj> * obj>> = 
         let clientAsm = loadAssembliesBytes assemblies
         clientAsm.ExportedTypes
             |> List.ofSeq 
