@@ -1,0 +1,25 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="SignalRServer/Program.fs">
+    <Files>
+      <File FileName="SignalRProviderTest/Global.asax.fs" Line="1" Column="1" />
+      <File FileName="SignalRProviderTest/Web.config" Line="1" Column="1" />
+      <File FileName="SignalRProviderTest/Views/Home/Index.cshtml" Line="1" Column="1" />
+      <File FileName="SignalRProviderTest/Controllers/HomeController.fs" Line="1" Column="1" />
+      <File FileName="SignalRProviderTest/Views/Web.config" Line="1" Column="1" />
+      <File FileName="SignalRProviderTest/AssemblyInfo.fs" Line="1" Column="1" />
+      <File FileName="BuildScript/Program.fs" Line="9" Column="39" />
+      <File FileName="SignalRFunScriptClient/SignalRClient.fs" Line="62" Column="36" />
+      <File FileName="SignalRProviderTest/readme.txt" Line="1" Column="1" />
+      <File FileName="SignalRServer/Program.fs" Line="62" Column="1" />
+      <File FileName="SignalRProviderTest/packages.config" Line="1" Column="1" />
+      <File FileName="SignalRServer/App.config" Line="1" Column="1" />
+      <File FileName="SignalRSelfHost/Program.fs" Line="21" Column="55" />
+      <File FileName="../../../Sites/index.html" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

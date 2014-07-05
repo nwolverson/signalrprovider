@@ -62,7 +62,7 @@ let printResult (value : string) =
 
 let main() = 
     Globals.console.log("##Starting:## ")
-    signalR.hub.url <- "/signalrHub"
+    signalR.hub.url <- "http://localhost:8088/signalrHub"
 
     proxy.on("myCustomClientFunction", fun args -> 
         let s = (args :> obj) :?> string // TODO varargs goes wrong

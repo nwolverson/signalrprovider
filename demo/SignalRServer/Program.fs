@@ -58,24 +58,10 @@ module MyServer =
 
     type MyWebStartup() =
         member x.Configuration(app:Owin.IAppBuilder) =
+            Owin.CorsExtensions.UseCors(app, Microsoft.Owin.Cors.CorsOptions.AllowAll) |> ignore
             Owin.OwinExtensions.MapSignalR(app, "/signalrHub", config) |> ignore
             
 
     [<assembly: Microsoft.Owin.OwinStartup(typeof<MyWebStartup>)>]
     do()
 
-    // If you want to run this as console application, then uncomment EntryPoint-attribute and
-    // from SignalRServer project properties change this application "Output Type" to: Console Application
-    // (But then this will be .exe-file instead of dll-file and you can't reference it from 
-    //  the current ASP.NET Web Application, project WebApp.)
-    //[<EntryPoint>]
-    let main argv = 
-        //Note that server and client has to use the same port
-        let url = "http://localhost:8080"
-        // Here you would need new empty C#-class just for configuration: ServerStartup.MyWebStartup:
-        use app =  WebApp.Start<MyWebStartup>(url) 
-        Console.WriteLine "Server running..."
-        Console.ReadLine() |> ignore
-        app.Dispose()
-        Console.WriteLine "Server closed."
-        0
