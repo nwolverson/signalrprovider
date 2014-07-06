@@ -45,5 +45,4 @@ Issues
 * Reflection to examine referenced assemblies is a horrible appdomain-creating mess. I hope I got it right, it was painful enough.
 * Only 1-way at present. Will be a bit of a circular reference situation when the other half comes, as well.
 * Return types of deferred object not right yet.
-* Non-primitive argument probably don't work
 * Assumes all hubs defined are available at the configured hub URL
