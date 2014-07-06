@@ -58,9 +58,13 @@ module MyServer =
 
     type MyWebStartup() =
         member x.Configuration(app:Owin.IAppBuilder) =
+            Owin.OwinExtensions.MapSignalR(app, "/signalrHub", config) |> ignore
+    
+    type CorsWebStartup() =
+        let config = new HubConfiguration(EnableDetailedErrors = true)
+        member x.Configuration(app:Owin.IAppBuilder) =
             Owin.CorsExtensions.UseCors(app, Microsoft.Owin.Cors.CorsOptions.AllowAll) |> ignore
             Owin.OwinExtensions.MapSignalR(app, "/signalrHub", config) |> ignore
-            
 
     [<assembly: Microsoft.Owin.OwinStartup(typeof<MyWebStartup>)>]
     do()
