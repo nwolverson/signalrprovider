@@ -12,7 +12,6 @@ open System.IO
 type t = int * string
 
 
-type complexType = SignalRProvider.Types.``SignalRServer!MyServer+ComplexObject``
 
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
@@ -35,29 +34,18 @@ type ComplexLocalType() =
     member val XX = 42 with get,set
     member val YY = "abc" with get,set
 
+type complexType = SignalRProvider.Types.``SignalRServer!MyServer+ComplexObject``
+
+open SignalRProviderRuntime
 let start () = 
 
+    let compty = new complexType()
+    compty.Number <- 43
+    compty.Text <- "abc"
+
     serverHub.testUpdating3() |> ignore
-    let arg = new complexType(Number=123) // (Number = 123, Text = "Test")
-    
-    let d = Map.empty.Add("a", 1)
-    let d1 = d.Add("b", 42)
-
-    let ay = d1.["a"]
-
-    serverHub.functionWith4Args(1, "2", arg, 5) |> ignore
-    //serverHub.complexArg()
-
-    let intList1 = ([|1;2;3|] :> obj) :?> Underscore.List<int>
-    let intList2 = ([|4;5;6|] :> obj) :?> Underscore.List<int>
-
-    
-    let u = Globals.Underscore.Invoke<int>([|1|]).unionOverload2(intList1, intList2)
-
-    let argss = [| intList1; intList2 |]
-    let v = Globals.Underscore.Invoke<int>([|1|]).unionOverload2 argss 
-    let w = Globals.Underscore.Invoke<int>([|1|]).unionOverload2  [| intList1; intList2 |] 
-
+    serverHub.functionWith4Args(1, "2", compty, 4) |> ignore
+   
     j("#submit").click (fun _ -> 
         serverHub.functionWith3Args(1, "2", 3)._doneOverload2( fun (x: obj) -> log <| x.ToString() ) |> ignore
         serverHub.MyCustomServerFunction(j("#source")._val() :?> string) |> ignore

@@ -1,15 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Web
-VisualStudioVersion = 12.0.30501.0
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SignalRProvider", "SignalRProvider\SignalRProvider.fsproj", "{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0007D4AE-886A-4D14-A392-EDAA86B00581} = {0007D4AE-886A-4D14-A392-EDAA86B00581}
-	EndProjectSection
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ReflectionProxy", "ReflectionProxy\ReflectionProxy.fsproj", "{0007D4AE-886A-4D14-A392-EDAA86B00581}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{AF3DCD4C-F07F-4DE8-8408-2D702E8E4789}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
@@ -17,22 +10,35 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{AF3DCD
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SignalRProviderRuntime", "SignalRProviderRuntime\SignalRProviderRuntime.fsproj", "{9BA22519-AFE1-45F5-B0FD-5EFB17E36BE5}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ReflectionProxy", "ReflectionProxy\ReflectionProxy.fsproj", "{0007D4AE-886A-4D14-A392-EDAA86B00581}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SignalRProvider", "SignalRProvider\SignalRProvider.fsproj", "{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BA22519-AFE1-45F5-B0FD-5EFB17E36BE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BA22519-AFE1-45F5-B0FD-5EFB17E36BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BA22519-AFE1-45F5-B0FD-5EFB17E36BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BA22519-AFE1-45F5-B0FD-5EFB17E36BE5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0007D4AE-886A-4D14-A392-EDAA86B00581}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0007D4AE-886A-4D14-A392-EDAA86B00581}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0007D4AE-886A-4D14-A392-EDAA86B00581}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0007D4AE-886A-4D14-A392-EDAA86B00581}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C1CAFA3-C6ED-4A9B-8EAD-3ED6C12E0759}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = SignalRProviderRuntime\SignalRProviderRuntime.fsproj
 	EndGlobalSection
 EndGlobal

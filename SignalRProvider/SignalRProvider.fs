@@ -15,6 +15,7 @@ open Microsoft.AspNet.SignalR.Hubs
 open Microsoft.AspNet.SignalR
 
 open ReflectionProxy
+open SignalRProviderRuntime
 
 [<TypeProvider>]
 type ClientProvider (config: TypeProviderConfig) as this =
@@ -40,28 +41,41 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let typeNs = "SignalRProvider.Types"
     let types = new System.Collections.Generic.List<ProvidedTypeDefinition>()
 
-    let makeMethodType hubName (name, args, ret:obj) =
-        let rec getTy (ty: obj) = 
+   
+
+    let makeMethodType hubName (name, (args: (string * StructuredType) list, ret: StructuredType)) =
+        
+        let rec getTy (ty: StructuredType) = 
             match ty with
-            | :? string as t -> Type.GetType(t)
-            | :? (string * (string * obj) list) as complex -> 
-                let (typeName, l) = complex
+            | Simple(t) -> Type.GetType(t)
+            | Complex(typeName, l) ->
                 let newTypeName = typeName.Replace('.', '!') // collapse namespaces but keep the full name
                 let typeDef = ProvidedTypeDefinition(asm, typeNs, newTypeName, Some typeof<obj>) 
+
+                let setMi = typeof<JsonObject>.GetMethod("Set")
+
                 typeDef.AddMembers(l |> List.map (fun (pName, pTy) -> 
-                    let p = ProvidedProperty(pName, getTy pTy, SetterCode = (fun args -> <@@ () @@>), GetterCode = (fun args -> <@@ () @@>))
+                    let pType = getTy pTy
+                    let set = setMi.MakeGenericMethod(pType)
+                    let p = ProvidedProperty(pName, 
+                                            pType,
+                                            SetterCode = (fun [ob; newVal] ->
+                                                Expr.Call(set, [ob; Expr.Value(pName); newVal])),
+                                            GetterCode = (fun [ob] -> 
+                                               <@@ () @@>))
+                                               // <@@ JsonObject.Get (%%ob: obj) pName @@>))
                     p))
-                typeDef.AddMember <| ProvidedConstructor([], InvokeCode =  (fun args -> <@@ new obj() @@>))
+                typeDef.AddMember <| ProvidedConstructor([], InvokeCode =  (fun args -> <@@ JsonObject.Create() @@>))
 
                 types.Add(typeDef)
                 upcast typeDef
 
 
-        let args = args |> Seq.map (fun (name, ty) -> ProvidedParameter(name, getTy ty))
+        let args = args |> List.map (fun (name, ty) -> ProvidedParameter(name, getTy ty))
         let returnType = 
-            if (typeof<unit>.FullName = (ret :?> string)) then typeof<unit>
-            else if (typeof<System.Void>.FullName = (ret:?> string)) then typeof<unit>
-            else getTy(ret)
+            match ret with
+            | Simple(t) when t = typeof<unit>.FullName || t = typeof<System.Void>.FullName -> typeof<unit>
+            | _ -> getTy(ret)
 
         let deferType = typedefof<JQueryDeferred<_>>.MakeGenericType(returnType)
 

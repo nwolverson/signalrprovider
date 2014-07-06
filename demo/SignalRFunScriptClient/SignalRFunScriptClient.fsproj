@@ -64,6 +64,9 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="FSharp.Core" />
+    <Reference Include="SignalRProviderRuntime">
+      <HintPath>..\..\SignalRProviderRuntime\bin\Debug\SignalRProviderRuntime.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SignalRClient.fs" />
@@ -71,12 +74,6 @@
     <None Include="typings\jquery\jquery.d.ts" />
     <None Include="typings\signalr\signalr.d.ts" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SignalRServer\SignalRServer.fsproj">
-      <Name>SignalRServer</Name>
-      <Project>B79D6D3C-23FA-4D27-AEAD-DC2391000220</Project>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -108,4 +105,10 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <ProjectReference Include="..\SignalRServer\SignalRServer.fsproj">
+      <Project>B79D6D3C-23FA-4D27-AEAD-DC2391000220</Project>
+      <Name>SignalRServer</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

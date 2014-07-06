@@ -4,6 +4,11 @@ open System.Reflection
 open System
 open System.IO
 
+
+type StructuredType = Simple of string | Complex of string * (String * StructuredType) list
+type MethodType = (string * StructuredType) list * StructuredType
+type HubType = string * (string * MethodType) list
+
 type ReflectionProxy() =
     inherit MarshalByRefObject()
 
@@ -42,14 +47,14 @@ type ReflectionProxy() =
         attr.GetType().GetProperty("HubName").GetValue(attr) :?> string
 
     let rec encodeType (t: Type) = 
-        if t.IsPrimitive || List.exists (fun x -> x = t) [ typeof<unit>; typeof<DateTime>; typeof<string> ] then t.FullName :> obj
+        if t.IsPrimitive || List.exists (fun x -> x = t) [ typeof<unit>; typeof<DateTime>; typeof<string> ] then Simple t.FullName
         else 
             let props = t.GetProperties(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getPropertyValue
             let fields = t.GetFields(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getFieldValue            
-            (t.FullName,  props @ fields) :> obj
+            Complex(t.FullName, (props @ fields))
     and getPropertyValue (pi: PropertyInfo) = (pi.Name, encodeType pi.PropertyType)
     and getFieldValue (pi: FieldInfo) = (pi.Name, encodeType pi.FieldType)
-    let makeHubType hubType =
+    let makeHubType hubType : HubType =
         let name = hubName hubType
 
         // exclusion taken from signalr defn
@@ -71,9 +76,9 @@ type ReflectionProxy() =
             |> Seq.map (getMethodType name) 
             |> List.ofSeq
 
-        let methTypeNames = 
+        let methTypeNames : (string * MethodType) list = 
             methTypes 
-            |> List.map (fun (name,args,retty) -> (name, args |> List.ofSeq |> List.map (fun (n,ty) -> (n, encodeType ty)), encodeType retty))
+            |> List.map (fun (name,args,retty) -> (name, (args |> List.ofSeq |> List.map (fun (n,ty) -> (n, encodeType ty)), encodeType retty)))
 
         (name, methTypeNames)
 
@@ -81,8 +86,7 @@ type ReflectionProxy() =
         let hasHubAttribute = hubAttrs >> Seq.isEmpty >> not
         List.filter hasHubAttribute hubs
 
-    member this.GetDefinedTypes(assemblies : string seq) 
-        : List<string * List<string * List<string * obj> * obj>> = 
+    member this.GetDefinedTypes(assemblies : string seq)  = 
         let clientAsm = loadAssembliesBytes assemblies
         clientAsm.ExportedTypes
             |> List.ofSeq 
