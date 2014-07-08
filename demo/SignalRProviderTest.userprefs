@@ -1,16 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../../Sites/Scripts/SignalRFunScriptClient.js">
+  <MonoDevelop.Ide.Workbench ActiveDocument="SignalRFunScriptClient/SignalRClient.fs">
     <Files>
-      <File FileName="SignalRFunScriptClient/SignalRClient.fs" Line="1" Column="1" />
-      <File FileName="../../../Sites/Scripts/SignalRFunScriptClient.js" Line="92" Column="37" />
-      <File FileName="SignalRServer/Program.fs" Line="1" Column="1" />
+      <File FileName="SignalRFunScriptClient/SignalRClient.fs" Line="17" Column="30" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True" selected="True" />
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

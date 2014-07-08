@@ -17,13 +17,7 @@ open Microsoft.AspNet.SignalR
 open ReflectionProxy
 open SignalRProviderRuntime
 
-[<TypeProvider>]
-type ClientProvider (config: TypeProviderConfig) as this =
-    inherit TypeProviderForNamespaces ()
-
-    let ns = "SignalRProvider.Hubs"
-    let asm = Assembly.GetExecutingAssembly()
-
+let getTypes assemblies = 
     let appDomain = AppDomain.CreateDomain("signalRprovider", null, new AppDomainSetup(ShadowCopyFiles="false",DisallowApplicationBaseProbing=true))
     let dll = typeof<ReflectionProxy>.Assembly.Location
     
@@ -33,15 +27,25 @@ type ClientProvider (config: TypeProviderConfig) as this =
     do AppDomain.CurrentDomain.add_AssemblyResolve handler
 
     let rp = obj :?> ReflectionProxy
-    let ret = rp.GetDefinedTypes(config.ReferencedAssemblies)
+    let ret = rp.GetDefinedTypes(assemblies)
 
     do AppDomain.CurrentDomain.remove_AssemblyResolve handler
     do AppDomain.Unload(appDomain)
 
+    ret
+
+
+[<TypeProvider>]
+type ClientProvider (config: TypeProviderConfig) as this =
+    inherit TypeProviderForNamespaces ()
+
+    let ns = "SignalRProvider.Hubs"
+    let asm = Assembly.GetExecutingAssembly()
+
+    let typeInfo = getTypes config.ReferencedAssemblies
+
     let typeNs = "SignalRProvider.Types"
     let types = new System.Collections.Generic.List<ProvidedTypeDefinition>()
-
-   
 
     let makeMethodType hubName (name, (args: (string * StructuredType) list, ret: StructuredType)) =
         
@@ -109,13 +113,13 @@ type ClientProvider (config: TypeProviderConfig) as this =
         Seq.iter ty.AddMember methodDefinedTypes 
         ty
 
-    let typeInfo = ret  
     let definedTypes = typeInfo |> List.map makeHubType
 
     do
         this.RegisterRuntimeAssemblyLocationAsProbingFolder(config)
         this.AddNamespace(ns, definedTypes)
         this.AddNamespace(typeNs, types |> List.ofSeq)
+
 
 [<assembly:TypeProviderAssembly>]
 do ()

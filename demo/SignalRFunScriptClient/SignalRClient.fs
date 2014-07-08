@@ -11,8 +11,6 @@ open System.IO
 
 type t = int * string
 
-
-
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
 let proxy = signalR.hub.createHubProxy("myHub")
@@ -35,6 +33,8 @@ type ComplexLocalType() =
     member val YY = "abc" with get,set
 
 type complexType = SignalRProvider.Types.``SignalRServer!MyServer+ComplexObject``
+
+type f = SignalRProvider
 
 open SignalRProviderRuntime
 let start () = 
@@ -60,6 +60,10 @@ let printResult (value : string) =
     |> j("#results").append
     |> ignore
 
+[<Microsoft.AspNet.SignalR.Hubs.HubName("ClientHub")>]
+type ClientHub() =
+    member x.myTypedFunction (args: obj array) = () 
+
 let main() = 
     Globals.console.log("##Starting:## ")
     signalR.hub.url <- "http://localhost:8080/signalrHub"
@@ -69,6 +73,9 @@ let main() =
         printResult s
         "Response: " + s |> log) 
     |> ignore
+
+    let h = new ClientHub()
+    proxy.on("myTypedFunction", fun args -> h.myTypedFunction(args)) |> ignore
 
     signalR.hub.start start
 

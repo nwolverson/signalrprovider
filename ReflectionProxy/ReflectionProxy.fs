@@ -82,9 +82,9 @@ type ReflectionProxy() =
 
         (name, methTypeNames)
 
-    let findHubs hubs = 
+    let findHubs types = 
         let hasHubAttribute = hubAttrs >> Seq.isEmpty >> not
-        List.filter hasHubAttribute hubs
+        List.filter hasHubAttribute types
 
     member this.GetDefinedTypes(assemblies : string seq)  = 
         let clientAsm = loadAssembliesBytes assemblies
