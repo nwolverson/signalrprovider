@@ -39,10 +39,48 @@ serverHub.frob(10); // OK
 serverHub.frob("string") // Fail to compile
 serverHub.foo(10) // Fail to compile
 ```
+
+When it comes to client hubs things are a little less standard. If a class is defined to represent
+the client hub, and has the `SignalRProviderRuntime.ClientHub` attribute applied
+
+```fsharp
+member this.myCustomClientFunction (s: string) =
+    "Response: " + s |> log
+```
+
+then the `SignalRServerProvider` will expose this client hub on the server side
+
+```fsharp
+open SignalRProvider.ClientHubs
+
+ClientHub.myCustomClientFunction ("Broadcast message: " + s)
+```
+
+(currently this is always effectively `Clients.All`). Unfortunately this still requires some manual wiring
+as FunScript objects have no methods as JS objects:
+
+```fsharp
+proxy.on("myCustomClientFunction", h.myCustomClientFunction)
+```
+    
+Circular References
+===================
+Due to the fact that the client and server providers both refer to the respective DLLs directly, and not
+via some interface, one cannot create a hub that calls methods on the other side, in both directions, without
+running into some horrible bootstrapping problem. This
+can be resolved by a bit of DI, as shown in the provided example. The client assembly is referencing the 
+server assembly directly, but the server assembly does not reference the client, instead a separate assembly
+is used for this functionality, which is then wrapped in a known type and passed into the server hub on creation.
+
+Note the example solution makes use of more separate projects than required, only 3 are needed - the server hub, 
+the client hub, and the host.
     
 Issues
 ======
-* Reflection to examine referenced assemblies is a horrible appdomain-creating mess. I hope I got it right, it was painful enough.
-* Only 1-way at present. Will be a bit of a circular reference situation when the other half comes, as well.
+* Reflection to examine referenced assemblies is a horrible appdomain-creating mess. I hope I got it right, it was painful enough. I think assemblies only get locked when 2nd copy of VS attached to debug TP.
 * Return types of deferred object not right yet.
+* Client hubs require manual wiring still
+* Only single-argument client methods supported right now
+* Only `Clients.All` supported, other variants to come
+* Bidirectional communcation is a little painful as circular references must be avoided
 * Assumes all hubs defined are available at the configured hub URL
