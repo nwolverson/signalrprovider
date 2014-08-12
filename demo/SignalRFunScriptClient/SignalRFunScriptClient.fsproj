@@ -39,9 +39,6 @@
     <DocumentationFile>bin\Release\SignalRFunScriptClient.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Data">
-      <HintPath>..\packages\FSharp.Data.2.0.9\lib\net40\FSharp.Data.dll</HintPath>
-    </Reference>
     <Reference Include="FunScript">
       <HintPath>..\packages\FunScript.1.1.49\lib\net40\FunScript.dll</HintPath>
     </Reference>

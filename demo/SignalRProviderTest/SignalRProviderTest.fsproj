@@ -52,8 +52,6 @@
     <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
   </PropertyGroup>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
-  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
   <ProjectExtensions>
     <MonoDevelop>
       <Properties VerifyCodeBehindFields="True" VerifyCodeBehindEvents="True">
@@ -175,7 +173,6 @@
     <!--<MSBuild.ExtensionPack.FileSystem.File TaskAction="Replace" RegexPattern="&lt;dependentAssembly&gt;([\s]+.)&lt;assemblyIdentity name=&quot;FSharp\.Core&quot; publicKeyToken=&quot;b03f5f7f11d50a3a&quot; culture=&quot;neutral&quot; \/&gt;([\s\S]+?)&lt;\/dependentAssembly&gt;" RegexOptionList="IgnoreCase|Singleline" Replacement="&lt;dependentAssembly&gt;&#xD;&#xA;        &lt;assemblyIdentity name=&quot;FSharp.Core&quot; publicKeyToken=&quot;b03f5f7f11d50a3a&quot; culture=&quot;neutral&quot; /&gt;&#xD;&#xA;        &lt;bindingRedirect oldVersion=&quot;0.0.0.0-$(TargetFSharpCoreVersion)&quot; newVersion=&quot;$(TargetFSharpCoreVersion)&quot;/&gt;&#xD;&#xA;      &lt;/dependentAssembly&gt;" Files="web.config" />-->
   </Target>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
@@ -186,6 +183,16 @@
     <ProjectReference Include="..\SignalRFunScriptClient\SignalRFunScriptClient.fsproj">
       <Project>6E4C6A75-5CE9-4B57-9793-7576496F1472</Project>
       <Name>SignalRFunScriptClient</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SignalRServerToClient\SignalRServerToClient.fsproj">
+      <Name>SignalRServerToClient</Name>
+      <Project>{5b496b8c-68fe-42fa-969b-22430d2aef11}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SignalRServer\SignalRServer.fsproj">
+      <Name>SignalRServer</Name>
+      <Project>{b79d6d3c-23fa-4d27-aead-dc2391000220}</Project>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
 </Project>

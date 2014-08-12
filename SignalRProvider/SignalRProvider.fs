@@ -34,7 +34,6 @@ let getTypes assemblies =
 
     ret
 
-
 [<TypeProvider>]
 type ClientProvider (config: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces ()
@@ -42,7 +41,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let ns = "SignalRProvider.Hubs"
     let asm = Assembly.GetExecutingAssembly()
 
-    let typeInfo = getTypes config.ReferencedAssemblies
+    let typeInfo = getTypes (config.ReferencedAssemblies |> Seq.filter (fun a -> a.EndsWith("Server.dll")) |> List.ofSeq) // TODO
 
     let typeNs = "SignalRProvider.Types"
     let types = new System.Collections.Generic.List<ProvidedTypeDefinition>()

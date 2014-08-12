@@ -1,15 +1,12 @@
 ﻿[<ReflectedDefinition>]
 module SignalRClient 
 
-open SignalRProvider
-
 open FunScript.TypeScript
 open FunScript
 
-open FSharp.Data
-open System.IO
+open SignalRProvider
 
-type t = int * string
+open System.IO
 
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
@@ -34,16 +31,11 @@ type ComplexLocalType() =
 
 type complexType = SignalRProvider.Types.``SignalRServer!MyServer+ComplexObject``
 
-type f = SignalRProvider
-
 open SignalRProviderRuntime
-let start () = 
-
+let onstart () = 
     let compty = new complexType()
     compty.Number <- 43
     compty.Text <- "abc"
-
-    serverHub.testUpdating3() |> ignore
     serverHub.functionWith4Args(1, "2", compty, 4) |> ignore
    
     j("#submit").click (fun _ -> 
@@ -60,24 +52,33 @@ let printResult (value : string) =
     |> j("#results").append
     |> ignore
 
-[<Microsoft.AspNet.SignalR.Hubs.HubName("ClientHub")>]
+[<SignalRProviderRuntime.ClientHub>]
 type ClientHub() =
-    member x.myTypedFunction (args: obj array) = () 
+    member this.myTypedFunction (x: int) = 
+        log <| "myTypedFunction called with argument: "+x.ToString()
+    member this.myTypedFunction42 (x: int) = 
+        log <| "myTypedFunction42 called with argument: "+x.ToString()
+    member this.functionWith2Args (x: int) (y: string) = 
+        log <| "functionWith2Args called with arguments: "+x.ToString()+y
+
+    member this.myCustomClientFunction (s: string) =
+        printResult s
+        "Response: " + s |> log
+
+let fixVarArgs (f: 't -> 't2) = System.Func<_,_>(fun (arg : obj array) -> f (arg :> obj :?> 't))
 
 let main() = 
     Globals.console.log("##Starting:## ")
-    signalR.hub.url <- "http://localhost:8080/signalrHub"
-
-    proxy.on("myCustomClientFunction", fun args -> 
-        let s = (args :> obj) :?> string // TODO varargs goes wrong
-        printResult s
-        "Response: " + s |> log) 
-    |> ignore
+    signalR.hub.url <- "http://localhost:48213/signalrHub"
 
     let h = new ClientHub()
-    proxy.on("myTypedFunction", fun args -> h.myTypedFunction(args)) |> ignore
+    proxy.on("myCustomClientFunction", h.myCustomClientFunction |> fixVarArgs)
+        .on("myTypedFunction", h.myTypedFunction |> fixVarArgs) 
+        .on("myTypedFunction42", h.myTypedFunction42 |> fixVarArgs)
+        //.on("functionWith2Args", h.functionWith2Args)
+        |> ignore
 
-    signalR.hub.start start
+    signalR.hub.start onstart
 
 type Wrapper() =
     member this.GenerateScript() = Compiler.compileWithoutReturn <@ main() @>

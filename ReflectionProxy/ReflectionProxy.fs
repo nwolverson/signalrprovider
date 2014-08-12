@@ -12,9 +12,7 @@ type HubType = string * (string * MethodType) list
 type ReflectionProxy() =
     inherit MarshalByRefObject()
 
-    let loadAssembliesBytes assemblies =
-        let ass = assemblies |> Seq.last
-
+    let loadAssemblyBytes ass = 
         let resolve (o: obj) (args: ResolveEventArgs) = 
             let name = AssemblyName(args.Name).Name
             try
@@ -23,9 +21,9 @@ type ReflectionProxy() =
                 | _ -> Assembly.LoadFrom <| Path.Combine(Path.GetDirectoryName ass, name + ".dll")
 
         AppDomain.CurrentDomain.add_AssemblyResolve (ResolveEventHandler resolve)
-        
-        ass
-        |> Assembly.LoadFrom
+        let res = Assembly.LoadFrom ass
+        AppDomain.CurrentDomain.remove_AssemblyResolve (ResolveEventHandler resolve)
+        res
 
     let getMethodType (hubName : string) (mi: MethodInfo) =
         let name = mi.Name
@@ -35,12 +33,14 @@ type ReflectionProxy() =
     
     // whatever version
     let nameHubNameAttr = "Microsoft.AspNet.SignalR.Hubs.HubNameAttribute"
+    // TODO - separate client/server attr etc. logic
+    let nameClientHubAttr = "SignalRProviderRuntime.ClientHubAttribute"
     let nameIHub = "Microsoft.AspNet.SignalR.Hubs.IHub"
     let nameHub = "Microsoft.AspNet.SignalR.Hubs.HHub"
 
     let hubAttrs (t: Type) = 
         t.GetCustomAttributes()
-        |> Seq.filter (fun attr -> attr.GetType().FullName = nameHubNameAttr)
+        |> Seq.filter (fun attr -> attr.GetType().FullName = nameHubNameAttr || attr.GetType().FullName = nameClientHubAttr)
 
     let hubName (hubType : Type) = 
         let attr = hubAttrs hubType |> Seq.head
@@ -61,13 +61,16 @@ type ReflectionProxy() =
         let excludeTypes = [ nameHub; typeof<obj>.FullName ]
         let excludeInterfaces = [ nameIHub; typeof<IDisposable>.FullName]
 
-        let findty tname = hubType.GetTypeInfo().ImplementedInterfaces |> Seq.find (fun i -> i.FullName = tname)
+        let findty tname = hubType.GetTypeInfo().ImplementedInterfaces |> Seq.tryFind (fun i -> i.FullName = tname)
 
         let exclude (m: MethodInfo) =
             m.IsSpecialName 
             || excludeTypes |> List.exists (fun x -> m.GetBaseDefinition().DeclaringType.FullName = x) 
             || excludeInterfaces 
-                |> Seq.collect (fun ity -> hubType.GetInterfaceMap(findty ity).TargetMethods) 
+                |> Seq.collect (fun ity ->
+                    match findty ity with 
+                    | Some(t) -> hubType.GetInterfaceMap(t).TargetMethods
+                    | None -> [||]) 
                 |> Seq.exists (fun x -> x = m) 
 
         let methTypes = 
@@ -87,10 +90,14 @@ type ReflectionProxy() =
         List.filter hasHubAttribute types
 
     member this.GetDefinedTypes(assemblies : string seq)  = 
-        let clientAsm = loadAssembliesBytes assemblies
-        clientAsm.ExportedTypes
-            |> List.ofSeq 
-            |> findHubs
-            |> List.map makeHubType
+        let asm = assemblies 
+        if (not (Seq.isEmpty asm)) then
+            let clientAsm = loadAssemblyBytes (Seq.last asm)
+            let types = clientAsm.ExportedTypes
+            types
+                |> List.ofSeq 
+                |> findHubs
+                |> List.map makeHubType
+        else 
+            []
         
-

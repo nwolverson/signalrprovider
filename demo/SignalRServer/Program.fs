@@ -20,23 +20,17 @@ module MyServer =
         member val Text = "" with get, set
 
     [<HubName("myhub")>]
-    type MyHub() as this = 
+    type MyHub(arg: int, clientFunc: string -> unit) = 
         inherit Hub()
-
-        member x.MyCustomServerFunction(fromClient : string) : unit =
-                let (t:Task) = this.Clients.Caller?myCustomClientFunction("Cheers for '" + fromClient + "'")
-                t.Wait()
+        
+        member this.MyCustomServerFunction(fromClient : string) : unit =
+            clientFunc fromClient
 
         member this.functionWith3Args(x : int, y: string, z: int) = 42.0 
-        member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = 42
+        member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = arg + z.Number
 
-        member this.testUpdating3() = false
-
-        member this.complexArg(arg: ComplexObject) = arg.Number
-
-        override x.OnConnected() =
+        override this.OnConnected() =
             base.OnConnected()
-            
 
 //------------------------------------------------------------------------------------------------------------
 // Options of hosting:
