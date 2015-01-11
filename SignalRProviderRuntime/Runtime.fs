@@ -13,7 +13,13 @@ type JsonObject =
     [<JSEmitInlineAttribute("(({0})[{1}]")>]
     static member Get (ob: obj) (propertyName: string) = failwith "FunScript emit" : 'x
 
+
+[<ReflectedDefinition>]
+type HubUtil =
+    [<JSEmitInline("({0}.client = {1})")>]
+    static member RegisterClientProxy (h : obj) (x: obj) =failwith "FunScript emit" : unit
+
 type ClientHubAttribute() = 
     inherit System.Attribute()
 
-    member this.HubName = "ClientHub"
+    member val HubName = "ClientHub" with get,set

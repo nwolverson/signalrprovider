@@ -41,7 +41,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let ns = "SignalRProvider.Hubs"
     let asm = Assembly.GetExecutingAssembly()
 
-    let typeInfo = getTypes (config.ReferencedAssemblies |> Seq.filter (fun a -> a.EndsWith("Server.dll")) |> List.ofSeq) // TODO
+    let (typeInfo, clientTypeInfo) = getTypes (config.ReferencedAssemblies |> Seq.filter (fun a -> a.EndsWith("Server.dll")) |> List.ofSeq)
 
     let typeNs = "SignalRProvider.Types"
     let types = new System.Collections.Generic.List<ProvidedTypeDefinition>()
@@ -112,11 +112,39 @@ type ClientProvider (config: TypeProviderConfig) as this =
         Seq.iter ty.AddMember methodDefinedTypes 
         ty
 
-    let definedTypes = typeInfo |> List.map makeHubType
+        
+    let makeClientHubType (name: string, methodTypeInfo) =
+        let name = if name.StartsWith("I") then name.Substring(1) else name
+        let setMi = typeof<JsonObject>.GetMethod("Set")
+        let set = setMi.MakeGenericMethod(typeof<obj>)
+        let get = typeof<JsonObject>.GetMethod("Get")
+
+        let prop (n: string) = 
+            let nameCamelised = n.Substring(0, 1) .ToLower() + n.Substring(1)
+            ProvidedProperty(n, typeof<obj>,
+                SetterCode = (fun [ob; newVal] ->
+                                                Expr.Call(set, [ob; Expr.Value(nameCamelised); newVal])),
+                GetterCode = (fun [ob] -> Expr.Call(get, [ob; Expr.Value(nameCamelised)]))) 
+        let methodDefinedTypes =
+            methodTypeInfo 
+            |> List.map (fun (n, x) -> n)
+            |> List.map prop    
+        let ty = ProvidedTypeDefinition(asm, ns, name, Some typeof<obj>)
+        ty.AddMember(ProvidedConstructor([], InvokeCode = (fun _ -> <@@ JsonObject.Create() |> box @@>)))
+        Seq.iter ty.AddMember methodDefinedTypes 
+
+        let invoke = (fun [obj; arg] -> Expr.Call(typeof<HubUtil>.GetMethod("RegisterClientProxy"), [arg; obj]))
+        ty.AddMember(ProvidedMethod("Register", [ProvidedParameter("hub", typeof<HubProxy>)], typeof<Void>, InvokeCode = invoke))
+
+        ty
+
+    let definedHubTypes = typeInfo |> List.map makeHubType
+    let definedClientHubTypes = clientTypeInfo |> List.map makeClientHubType
 
     do
         this.RegisterRuntimeAssemblyLocationAsProbingFolder(config)
-        this.AddNamespace(ns, definedTypes)
+        this.AddNamespace(ns, definedHubTypes)
+        this.AddNamespace(ns, definedClientHubTypes)
         this.AddNamespace(typeNs, types |> List.ofSeq)
 
 
