@@ -1,8 +1,5 @@
 namespace SignalRProviderTest
 
-open System
-open System.Net.Http
-open System.Web
 open System.Web.Mvc
 open System.Web.Routing
 open Microsoft.AspNet.SignalR
@@ -33,7 +30,7 @@ type Global() =
         Global.RegisterRoutes(RouteTable.Routes)
 
         let makeHub() = 
-            let hub = new SignalRServer.MyServer.MyHub(12345, SignalRServerToClient.ClientHubConsumer.myTypedFunction) 
+            let hub = new SignalRServer.MyServer.MyHub() 
             System.Diagnostics.Debug.WriteLine "created hub in makeHub"
             hub :> obj
         

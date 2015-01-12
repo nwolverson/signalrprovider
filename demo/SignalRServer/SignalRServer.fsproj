@@ -60,8 +60,6 @@
     <None Include="Interactive.fsx" />
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="types.tt" />
-    <None Include="signalr.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.AspNet.SignalR.Core">
