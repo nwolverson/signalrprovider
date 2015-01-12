@@ -8,12 +8,12 @@ module MyServer =
         member val Number = 0 with get, set
         member val Text = "" with get, set
 
-    type ImyhubClient =
+    type IMyHubClient =
         abstract member BroadcastMessage : string -> unit
 
     [<HubName("myhub")>]
     type MyHub() = 
-        inherit Hub<ImyhubClient>()
+        inherit Hub<IMyHubClient>()
         
         member this.SendMessage(text : string) : string =
             this.Clients.Others.BroadcastMessage(text)

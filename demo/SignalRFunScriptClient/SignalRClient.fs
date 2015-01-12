@@ -54,7 +54,7 @@ let main() =
     Globals.console.log("##Starting:## ")
     signalR.hub.url <- "http://localhost:48213/signalrHub"
 
-    let client = Hubs.myhubClient()
+    let client = Hubs.MyHubClient()
     client.BroadcastMessage <- (fun msg -> printResult msg)
     client.Register(proxy)
 

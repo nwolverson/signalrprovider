@@ -42,14 +42,12 @@ type ReflectionProxy() =
     
     // whatever version
     let nameHubNameAttr = "Microsoft.AspNet.SignalR.Hubs.HubNameAttribute"
-    // TODO - separate client/server attr etc. logic
-    let nameClientHubAttr = "SignalRProviderRuntime.ClientHubAttribute"
     let nameIHub = "Microsoft.AspNet.SignalR.Hubs.IHub"
     let nameHub = "Microsoft.AspNet.SignalR.Hubs.HHub"
 
     let hubAttrs (t: Type) = 
         t.GetCustomAttributes()
-        |> Seq.filter (fun attr -> attr.GetType().FullName = nameHubNameAttr || attr.GetType().FullName = nameClientHubAttr)
+        |> Seq.filter (fun attr -> attr.GetType().FullName = nameHubNameAttr)
 
     let hubName (hubType : Type) = 
         match hubAttrs hubType |> List.ofSeq with
@@ -101,14 +99,12 @@ type ReflectionProxy() =
 
         (name, methTypeNames)
 
-
-
     let findHubs types = 
         let hasHubAttribute = hubAttrs >> Seq.isEmpty >> not
         List.filter hasHubAttribute types
 
     let findClientHubDefs (types : Type list) hubName =
-        types |> List.filter  (fun t -> t.Name = "I" + hubName + "Client" )
+        types |> List.filter  (fun t -> String.Equals(t.Name, "I" + hubName + "Client", StringComparison.OrdinalIgnoreCase))
 
     member this.GetDefinedTypes(assemblies : string seq)  = 
         let asm = assemblies 
