@@ -41,38 +41,40 @@ type ClientProvider (config: TypeProviderConfig) as this =
     let ns = "SignalRProvider.Hubs"
     let asm = Assembly.GetExecutingAssembly()
 
-    let (typeInfo, clientTypeInfo) = getTypes (config.ReferencedAssemblies |> Seq.filter (fun a -> a.EndsWith("Server.dll")) |> List.ofSeq)
+    let (typeInfo, clientTypeInfo) = config.ReferencedAssemblies |> List.ofSeq |> getTypes
 
     let typeNs = "SignalRProvider.Types"
     let types = new System.Collections.Generic.List<ProvidedTypeDefinition>()
 
+    
+    let rec getTy (ty: StructuredType) = 
+        match ty with
+        | Simple(t) -> Type.GetType(t)
+        | Complex(typeName, l) ->
+            let newTypeName = typeName.Replace('.', '!') // collapse namespaces but keep the full name
+            let typeDef = ProvidedTypeDefinition(asm, typeNs, newTypeName, Some typeof<obj>) 
+
+            let setMi = typeof<JsonObject>.GetMethod("Set")
+
+            typeDef.AddMembers(l |> List.map (fun (pName, pTy) -> 
+                let pType = getTy pTy
+                let set = setMi.MakeGenericMethod(pType)
+                let p = ProvidedProperty(pName, 
+                                        pType,
+                                        SetterCode = (fun [ob; newVal] ->
+                                            Expr.Call(set, [ob; Expr.Value(pName); newVal])),
+                                        GetterCode = (fun [ob] -> 
+                                            <@@ () @@>))
+                                            // <@@ JsonObject.Get (%%ob: obj) pName @@>))
+                p))
+            typeDef.AddMember <| ProvidedConstructor([], InvokeCode =  (fun args -> <@@ JsonObject.Create() @@>))
+
+            types.Add(typeDef)
+            upcast typeDef
+
+
     let makeMethodType hubName (name, (args: (string * StructuredType) list, ret: StructuredType)) =
         
-        let rec getTy (ty: StructuredType) = 
-            match ty with
-            | Simple(t) -> Type.GetType(t)
-            | Complex(typeName, l) ->
-                let newTypeName = typeName.Replace('.', '!') // collapse namespaces but keep the full name
-                let typeDef = ProvidedTypeDefinition(asm, typeNs, newTypeName, Some typeof<obj>) 
-
-                let setMi = typeof<JsonObject>.GetMethod("Set")
-
-                typeDef.AddMembers(l |> List.map (fun (pName, pTy) -> 
-                    let pType = getTy pTy
-                    let set = setMi.MakeGenericMethod(pType)
-                    let p = ProvidedProperty(pName, 
-                                            pType,
-                                            SetterCode = (fun [ob; newVal] ->
-                                                Expr.Call(set, [ob; Expr.Value(pName); newVal])),
-                                            GetterCode = (fun [ob] -> 
-                                               <@@ () @@>))
-                                               // <@@ JsonObject.Get (%%ob: obj) pName @@>))
-                    p))
-                typeDef.AddMember <| ProvidedConstructor([], InvokeCode =  (fun args -> <@@ JsonObject.Create() @@>))
-
-                types.Add(typeDef)
-                upcast typeDef
-
 
         let args = args |> List.map (fun (name, ty) -> ProvidedParameter(name, getTy ty))
         let returnType = 
@@ -113,22 +115,35 @@ type ClientProvider (config: TypeProviderConfig) as this =
         ty
 
         
-    let makeClientHubType (name: string, methodTypeInfo) =
+    let makeClientHubType ((name: string, methodTypeInfo): HubType) =
         let name = if name.StartsWith("I") then name.Substring(1) else name
         let setMi = typeof<JsonObject>.GetMethod("Set")
         let set = setMi.MakeGenericMethod(typeof<obj>)
         let get = typeof<JsonObject>.GetMethod("Get")
 
-        let prop (n: string) = 
+
+
+        let prop (n: string) t = 
+            let (args: (string * StructuredType) list, ret: StructuredType) = t
+            // TODO multiple
+            let argTys = args |> List.map (fun (name, ty) -> getTy ty)
+            let returnType = 
+                match ret with
+                | Simple(t) when t = typeof<unit>.FullName || t = typeof<System.Void>.FullName -> typeof<unit>
+                | _ -> getTy(ret)
             let nameCamelised = n.Substring(0, 1) .ToLower() + n.Substring(1)
-            ProvidedProperty(n, typeof<obj>,
+            let types = argTys @ [returnType] |> List.toArray
+            let tyDef = match types.Length with
+                        | n when n < 10 -> Type.GetType("System.Func`" + n.ToString())
+                        | _ -> failwith <| "Function with too many params: " + n
+            let ty = tyDef.MakeGenericType(types)
+            ProvidedProperty(n, ty,
                 SetterCode = (fun [ob; newVal] ->
                                                 Expr.Call(set, [ob; Expr.Value(nameCamelised); newVal])),
                 GetterCode = (fun [ob] -> Expr.Call(get, [ob; Expr.Value(nameCamelised)]))) 
         let methodDefinedTypes =
             methodTypeInfo 
-            |> List.map (fun (n, x) -> n)
-            |> List.map prop    
+            |> List.map (fun (n, x) -> prop n x)
         let ty = ProvidedTypeDefinition(asm, ns, name, Some typeof<obj>)
         ty.AddMember(ProvidedConstructor([], InvokeCode = (fun _ -> <@@ JsonObject.Create() |> box @@>)))
         Seq.iter ty.AddMember methodDefinedTypes 

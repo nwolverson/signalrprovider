@@ -10,6 +10,8 @@ module MyServer =
 
     type IMyHubClient =
         abstract member BroadcastMessage : string -> unit
+        abstract member FiveArgs : string -> int -> float -> string -> int -> unit
+        abstract member FiveArgsTupled : string * int * float * string * int -> unit
 
     [<HubName("myhub")>]
     type MyHub() = 
@@ -19,8 +21,13 @@ module MyServer =
             this.Clients.Others.BroadcastMessage(text)
             "Message sent"
 
-        member this.functionWith3Args(x : int, y: string, z: int) = 42.0 
-        member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = xx * a + z.Number
+        member this.functionWith3Args(x : int, y: string, z: int) = 
+            this.Clients.Caller.FiveArgs y x 3.4 y x
+            42.0 
+
+        member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = 
+            this.Clients.Caller.FiveArgsTupled("abc"+y, xx, 42.12345, a.ToString(), z.Number)
+            xx * a + z.Number
 
         override this.OnConnected() =
             base.OnConnected()

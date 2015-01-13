@@ -6,6 +6,8 @@ open FunScript
 
 open SignalRProvider
 
+open System
+
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
 let proxy = signalR.hub.createHubProxy("myHub")
@@ -56,6 +58,8 @@ let main() =
 
     let client = Hubs.MyHubClient()
     client.BroadcastMessage <- (fun msg -> printResult msg)
+    client.FiveArgs <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
+    client.FiveArgsTupled <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
     client.Register(proxy)
 
     signalR.hub.start onstart

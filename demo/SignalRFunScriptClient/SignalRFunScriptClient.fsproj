@@ -88,8 +88,6 @@
   <ItemGroup>
     <Compile Include="SignalRClient.fs" />
     <None Include="app.config" />
-    <None Include="typings\jquery\jquery.d.ts" />
-    <None Include="typings\signalr\signalr.d.ts" />
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>
