@@ -6,7 +6,7 @@ F# Type Provider for SignalR with FunScript
 Type provider giving a typed view of a .NET SignalR server Hub (could be C# or F#) to client-side code compiled
 from F# to JavaScript with FunScript.
 
-Next step, a type provider giving the reverse (typed view for F# server -> FunScript client calls).
+It more or less gives the effect of generating TypeScript definitions for the hubs [for which tools exist](http://www.scottlogic.com/blog/2014/08/08/signalr-typed.html), and generating FunScript bindings for these definitions, except updating smoothly on a simple build of the server DLL.
 
 How it works
 ============
@@ -40,7 +40,7 @@ serverHub.frob("string") // Fail to compile
 serverHub.foo(10) // Fail to compile
 ```
 
-When it comes to client hubs an interface type can be defined in the server hub DLL using the magic name `IMyHubClient` (as per (`Hubs.tt`)[https://gist.github.com/robfe/4583549]). SignalR strongly typed hub support 
+When it comes to client hubs an interface type can be defined in the server hub DLL using the magic name `IMyHubClient` (as per [`Hubs.tt`](https://gist.github.com/robfe/4583549)). SignalR strongly typed hub support 
 can be used on the server side:
 
 ```fsharp
