@@ -57,11 +57,9 @@ Then on the client side a type is generated `MyHubClient` with setters for the i
 register the hub:
 
 ```fsharp
-let proxy = signalR.hub.createHubProxy("myHub")
-
 let client = Hubs.MyHubClient()
 client.ClientMessage <- (fun msg -> Globals.console.log(msg))
-client.Register(proxy)
+client.Register(signalR.hub)
 ```
 
 Issues

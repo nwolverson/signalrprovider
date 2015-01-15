@@ -115,7 +115,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
         ty
 
         
-    let makeClientHubType ((name: string, methodTypeInfo): HubType) =
+    let makeClientHubType (hubName, ((name: string, methodTypeInfo): HubType)) =
         let name = if name.StartsWith("I") then name.Substring(1) else name
         let setMi = typeof<JsonObject>.GetMethod("Set")
         let set = setMi.MakeGenericMethod(typeof<obj>)
@@ -123,9 +123,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
 
 
 
-        let prop (n: string) t = 
-            let (args: (string * StructuredType) list, ret: StructuredType) = t
-            // TODO multiple
+        let prop (n: string) (args: (string * StructuredType) list, ret: StructuredType) = 
             let argTys = args |> List.map (fun (name, ty) -> getTy ty)
             let returnType = 
                 match ret with
@@ -148,13 +146,18 @@ type ClientProvider (config: TypeProviderConfig) as this =
         ty.AddMember(ProvidedConstructor([], InvokeCode = (fun _ -> <@@ JsonObject.Create() |> box @@>)))
         Seq.iter ty.AddMember methodDefinedTypes 
 
-        let invoke = (fun [obj; arg] -> Expr.Call(typeof<HubUtil>.GetMethod("RegisterClientProxy"), [arg; obj]))
-        ty.AddMember(ProvidedMethod("Register", [ProvidedParameter("hub", typeof<HubProxy>)], typeof<Void>, InvokeCode = invoke))
+        let invoke [obj; arg] =
+            let objExpr = <@@ let conn = (%%arg: HubConnection)
+                              conn.createHubProxy(hubName) @@>
+            Expr.Call(typeof<HubUtil>.GetMethod("RegisterClientProxy"), [objExpr; obj])
+        ty.AddMember(ProvidedMethod("Register", [ProvidedParameter("conn", typeof<HubConnection>)], typeof<Void>, InvokeCode = invoke))
 
         ty
 
     let definedHubTypes = typeInfo |> List.map makeHubType
-    let definedClientHubTypes = clientTypeInfo |> List.map makeClientHubType
+    let definedClientHubTypes =
+        List.zip (typeInfo |> List.map (fun (n,_) -> n)) clientTypeInfo
+        |> List.map makeClientHubType
 
     do
         this.RegisterRuntimeAssemblyLocationAsProbingFolder(config)
