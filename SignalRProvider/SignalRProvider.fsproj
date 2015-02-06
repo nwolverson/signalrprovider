@@ -58,7 +58,6 @@
     <Compile Include="ProvidedTypes\Code\Debug.fs" />
     <Compile Include="SignalRProvider.fs" />
     <None Include="packages.config" />
-    <None Include="Script1.fsx" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>

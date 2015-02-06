@@ -109,10 +109,6 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <None Include="packages.config" />
-    <Content Include="readme.txt" />
-    <None Include="Scripts\underscore-min.map" />
-    <Content Include="Scripts\underscore-min.js" />
-    <Content Include="Scripts\underscore.js" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.AspNet.SignalR.Core">
