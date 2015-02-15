@@ -12,6 +12,7 @@ module MyServer =
         abstract member BroadcastMessage : string -> unit
         abstract member FiveArgs : string -> int -> float -> string -> int -> unit
         abstract member FiveArgsTupled : string * int * float * string * int -> unit
+        abstract member SendList : int list -> unit
 
     [<HubName("myhub")>]
     type MyHub() = 
@@ -19,6 +20,7 @@ module MyServer =
         
         member this.SendMessage(text : string) : string =
             this.Clients.Others.BroadcastMessage(text)
+            this.Clients.Caller.SendList([1; 2; 3])
             "Message sent"
 
         member this.functionWith3Args(x : int, y: string, z: int) = 

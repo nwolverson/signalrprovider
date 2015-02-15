@@ -71,6 +71,11 @@ type ClientProvider (config: TypeProviderConfig) as this =
 
             types.Add(typeDef)
             upcast typeDef
+        | List(t) -> 
+            let memberType = getTy t
+            System.Array.CreateInstance(memberType, 0).GetType()
+        
+         //typedefof<array<_>>.MakeGenericType(getTy t)
 
 
     let makeMethodType hubName (name, (args: (string * StructuredType) list, ret: StructuredType)) =

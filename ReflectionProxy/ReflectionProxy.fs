@@ -6,7 +6,7 @@ open System.IO
 
 open Microsoft.FSharp.Reflection
 
-type StructuredType = Simple of string | Complex of string * (String * StructuredType) list
+type StructuredType = Simple of string | Complex of string * (String * StructuredType) list | List of StructuredType
 type MethodType = (string * StructuredType) list * StructuredType
 type HubType = string * (string * MethodType) list
 
@@ -56,6 +56,8 @@ type ReflectionProxy() =
 
     let rec encodeType (t: Type) = 
         if t.IsPrimitive || List.exists (fun x -> x = t) [ typeof<unit>; typeof<DateTime>; typeof<string> ] then Simple t.FullName
+        else if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<list<_>> then
+            t.GetGenericArguments() |> Seq.exactlyOne |> encodeType |> List 
         else 
             let props = t.GetProperties(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getPropertyValue
             let fields = t.GetFields(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getFieldValue            

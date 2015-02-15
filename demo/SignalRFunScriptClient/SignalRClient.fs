@@ -53,10 +53,15 @@ let main() =
     Globals.console.log("##Starting:## ")
     signalR.hub.url <- "http://localhost:48213/signalrHub"
 
+    
+    let myList = [1; 2 ; 3]
+    let myArray = [| 1 ; 2 ; 3 ; 4 |]
+
     let client = Hubs.MyHubClient()
     client.BroadcastMessage <- (fun msg -> printResult msg)
     client.FiveArgs <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
     client.FiveArgsTupled <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
+    client.SendList <- (fun xs -> log <| xs.Length.ToString())
     client.Register(signalR.hub)
 
     signalR.hub.start onstart
