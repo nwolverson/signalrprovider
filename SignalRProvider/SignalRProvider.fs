@@ -1,18 +1,13 @@
 ﻿module SignalRProvider
 
-open System.IO
 open ProviderImplementation.ProvidedTypes
 
 open Microsoft.FSharp.Core.CompilerServices
 open System.Reflection
 open System
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
 
 open FunScript.TypeScript
-open Microsoft.AspNet.SignalR.Hubs
-open Microsoft.AspNet.SignalR
 
 open ReflectionProxy
 open SignalRProviderRuntime
