@@ -43,7 +43,7 @@ type ReflectionProxy() =
     // whatever version
     let nameHubNameAttr = "Microsoft.AspNet.SignalR.Hubs.HubNameAttribute"
     let nameIHub = "Microsoft.AspNet.SignalR.Hubs.IHub"
-    let nameHub = "Microsoft.AspNet.SignalR.Hubs.HHub"
+    let nameHub = "Microsoft.AspNet.SignalR.Hub"
 
     let hubAttrs (t: Type) = 
         t.GetCustomAttributes()
@@ -65,6 +65,7 @@ type ReflectionProxy() =
     and getPropertyValue (pi: PropertyInfo) = (pi.Name, encodeType pi.PropertyType)
     and getFieldValue (pi: FieldInfo) = (pi.Name, encodeType pi.FieldType)
 
+    let findty (hubType : Type) tname = hubType.GetTypeInfo().ImplementedInterfaces |> Seq.tryFind (fun i -> i.FullName = tname)
 
     let makeHubType hubType : HubType =
         let name = hubName hubType
@@ -73,14 +74,12 @@ type ReflectionProxy() =
         let excludeTypes = [ nameHub; typeof<obj>.FullName ]
         let excludeInterfaces = [ nameIHub; typeof<IDisposable>.FullName]
 
-        let findty tname = hubType.GetTypeInfo().ImplementedInterfaces |> Seq.tryFind (fun i -> i.FullName = tname)
-
         let exclude (m: MethodInfo) =
             //m.IsSpecialName             ||
              excludeTypes |> List.exists (fun x -> m.GetBaseDefinition().DeclaringType.FullName = x) 
             || excludeInterfaces 
                 |> Seq.collect (fun ity ->
-                    match findty ity with 
+                    match findty hubType ity with 
                     | Some(t) -> hubType.GetInterfaceMap(t).TargetMethods
                     | None -> [||]) 
                 |> Seq.exists (fun x -> x = m) 
@@ -105,21 +104,29 @@ type ReflectionProxy() =
         let hasHubAttribute = hubAttrs >> Seq.isEmpty >> not
         List.filter hasHubAttribute types
 
-    let findClientHubDefs (types : Type list) hubName =
-        types 
-        |> List.filter (fun t -> String.Equals(t.Name, "I" + hubName + "Client", StringComparison.OrdinalIgnoreCase))
-        
+    let rec findAncestorType (t : Type) ns name =
+        if t.Name = name && t.Namespace = ns then Some t
+        else if t.BaseType = null then None
+        else findAncestorType (t.BaseType) ns name
+
+    let findClientHubDefs (types : Type list) (hubTypes : Type list) hubName =
+        hubTypes
+        |> List.choose (fun t -> 
+            match findAncestorType t "Microsoft.AspNet.SignalR" "Hub`1" with
+            | Some tt when tt.IsGenericType -> Some tt.GenericTypeArguments.[0]
+            | _ -> None)
 
     member this.GetDefinedTypes(assemblies : string seq)  = 
         let asm = assemblies 
         if (not (Seq.isEmpty asm)) then
             let clientAsm = loadAssemblyBytes (Seq.last asm)
             let types = clientAsm.ExportedTypes |> List.ofSeq
-            let hubTypes = types |> findHubs |> List.map makeHubType
+            let hubTypes = types |> findHubs
+            let hubTypeInfo = hubTypes |> List.map makeHubType
             let clientHubDef name =
-                findClientHubDefs types name |> List.map (fun t -> (name, makeHubType t))
-            let clientHubDefs = List.map fst hubTypes |> List.collect clientHubDef
-            (hubTypes, clientHubDefs)
+                findClientHubDefs types hubTypes name |> List.map (fun t -> (name, makeHubType t))
+            let clientHubDefs = List.map fst hubTypeInfo |> List.collect clientHubDef
+            (hubTypeInfo, clientHubDefs)
         else 
             ([], [])
             

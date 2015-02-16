@@ -10,7 +10,7 @@ let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
 let log = Globals.console.log
 
-let serverHub = new Hubs.myhub(signalR.hub)
+let serverHub = new Hubs.myServerHub(signalR.hub)
 
 let logDeferred s (df: JQueryDeferred<_>) =
 
@@ -48,16 +48,12 @@ let printResult (value : string) =
     |> j("#results").append 
     |> ignore
 
-
+    
 let main() = 
     Globals.console.log("##Starting:## ")
     signalR.hub.url <- "http://localhost:48213/signalrHub"
 
-    
-    let myList = [1; 2 ; 3]
-    let myArray = [| 1 ; 2 ; 3 ; 4 |]
-
-    let client = Hubs.MyHubClient()
+    let client = Hubs.MyAwesomeClientHub()
     client.BroadcastMessage <- (fun msg -> printResult msg)
     client.FiveArgs <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
     client.FiveArgsTupled <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())

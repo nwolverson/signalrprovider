@@ -8,27 +8,27 @@ module MyServer =
         member val Number = 0 with get, set
         member val Text = "" with get, set
 
-    type IMyHubClient =
+    type IMyAwesomeClientHub =
         abstract member BroadcastMessage : string -> unit
         abstract member FiveArgs : string -> int -> float -> string -> int -> unit
         abstract member FiveArgsTupled : string * int * float * string * int -> unit
         abstract member SendList : int list -> unit
 
-    [<HubName("myhub")>]
+    [<HubName("myServerHub")>]
     type MyHub() = 
-        inherit Hub()
+        inherit Hub<IMyAwesomeClientHub>()
         
         member this.SendMessage(text : string) : string =
-//            this.Clients.Others.BroadcastMessage(text)
-//            this.Clients.Caller.SendList([1; 2; 3])
+            this.Clients.Others.BroadcastMessage(text)
+            this.Clients.Caller.SendList([1; 2; 3])
             "Message sent"
 
         member this.functionWith3Args(x : int, y: string, z: int) = 
-//            this.Clients.Caller.FiveArgs y x 3.4 y x
+            this.Clients.Caller.FiveArgs y x 3.4 y x
             42.0 
 
         member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = 
-//            this.Clients.Caller.FiveArgsTupled("abc"+y, xx, 42.12345, a.ToString(), z.Number)
+            this.Clients.Caller.FiveArgsTupled("abc"+y, xx, 42.12345, a.ToString(), z.Number)
             xx * a + z.Number
 
         override this.OnConnected() =
