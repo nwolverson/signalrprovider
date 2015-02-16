@@ -40,8 +40,8 @@ serverHub.frob("string") // Fail to compile
 serverHub.foo(10) // Fail to compile
 ```
 
-When it comes to client hubs an interface type can be defined in the server hub DLL using the magic name `IMyHubClient` (as per [`Hubs.tt`](https://gist.github.com/robfe/4583549)). SignalR strongly typed hub support 
-can be used on the server side:
+When it comes to client hubs an interface type can be defined in the server hub DLL.
+This should be used as the parameter to a SignalR strongly typed hub `Hub<IMyHubClient>`:
 
 ```fsharp
 type IMyHubClient =
