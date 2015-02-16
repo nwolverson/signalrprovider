@@ -58,6 +58,8 @@ let main() =
     client.FiveArgs <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
     client.FiveArgsTupled <- (fun a b c d e -> log <| a + b.ToString() + c.ToString() + d + e.ToString())
     client.SendList <- (fun xs -> log <| xs.Length.ToString())
+    client.SendArray <- (fun xsa -> log <| xsa.Length.ToString())
+    client.SendSeq <- (fun xss -> log <| xss.Length.ToString())
     client.Register(signalR.hub)
 
     signalR.hub.start onstart

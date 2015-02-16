@@ -56,8 +56,11 @@ type ReflectionProxy() =
 
     let rec encodeType (t: Type) = 
         if t.IsPrimitive || List.exists (fun x -> x = t) [ typeof<unit>; typeof<DateTime>; typeof<string> ] then Simple t.FullName
-        else if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<list<_>> then
-            t.GetGenericArguments() |> Seq.exactlyOne |> encodeType |> List 
+        else if typeof<System.Collections.IEnumerable>.IsAssignableFrom(t) then
+            let memberTy = match t.GetInterface "IEnumerable`1" with
+                            | null -> typeof<obj>
+                            | tt -> tt.GetGenericArguments() |> Seq.exactlyOne
+            memberTy |> encodeType |> List
         else 
             let props = t.GetProperties(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getPropertyValue
             let fields = t.GetFields(BindingFlags.Instance ||| BindingFlags.Public) |> List.ofArray |> List.map getFieldValue            

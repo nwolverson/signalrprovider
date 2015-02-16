@@ -13,6 +13,8 @@ module MyServer =
         abstract member FiveArgs : string -> int -> float -> string -> int -> unit
         abstract member FiveArgsTupled : string * int * float * string * int -> unit
         abstract member SendList : int list -> unit
+        abstract member SendArray : int[] -> unit
+        abstract member SendSeq : int seq -> unit
 
     [<HubName("myServerHub")>]
     type MyHub() = 
@@ -21,6 +23,8 @@ module MyServer =
         member this.SendMessage(text : string) : string =
             this.Clients.Others.BroadcastMessage(text)
             this.Clients.Caller.SendList([1; 2; 3])
+            this.Clients.Caller.SendArray([|1; 2; 3; 4|])
+            this.Clients.Caller.SendSeq( Seq.ofList [ 1; 2; 3; 4; 5 ])
             "Message sent"
 
         member this.functionWith3Args(x : int, y: string, z: int) = 
