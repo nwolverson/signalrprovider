@@ -160,9 +160,7 @@ type ClientProvider (config: TypeProviderConfig) as this =
         ty
 
     let definedHubTypes = typeInfo |> List.map makeHubType
-    let definedClientHubTypes =
-        List.zip (typeInfo |> List.map (fun (n,_) -> n)) clientTypeInfo
-        |> List.map makeClientHubType
+    let definedClientHubTypes = clientTypeInfo |> List.map makeClientHubType
 
     do
         this.RegisterRuntimeAssemblyLocationAsProbingFolder(config)

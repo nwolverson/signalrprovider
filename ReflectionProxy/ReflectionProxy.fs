@@ -106,7 +106,9 @@ type ReflectionProxy() =
         List.filter hasHubAttribute types
 
     let findClientHubDefs (types : Type list) hubName =
-        types |> List.filter  (fun t -> String.Equals(t.Name, "I" + hubName + "Client", StringComparison.OrdinalIgnoreCase))
+        types 
+        |> List.filter (fun t -> String.Equals(t.Name, "I" + hubName + "Client", StringComparison.OrdinalIgnoreCase))
+        
 
     member this.GetDefinedTypes(assemblies : string seq)  = 
         let asm = assemblies 
@@ -114,8 +116,9 @@ type ReflectionProxy() =
             let clientAsm = loadAssemblyBytes (Seq.last asm)
             let types = clientAsm.ExportedTypes |> List.ofSeq
             let hubTypes = types |> findHubs |> List.map makeHubType
-            let names = List.map (fun (a,b) -> a) hubTypes
-            let clientHubDefs = List.collect (findClientHubDefs types) names |> List.map makeHubType
+            let clientHubDef name =
+                findClientHubDefs types name |> List.map (fun t -> (name, makeHubType t))
+            let clientHubDefs = List.map fst hubTypes |> List.collect clientHubDef
             (hubTypes, clientHubDefs)
         else 
             ([], [])
