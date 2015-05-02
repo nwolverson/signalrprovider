@@ -5,6 +5,7 @@ open FunScript.TypeScript
 open FunScript
 
 open SignalRProvider
+open System
 
 let signalR = Globals.Dollar.signalR
 let j (s: string) = Globals.Dollar.Invoke(s)
@@ -32,6 +33,7 @@ let onstart () =
     let compty = new complexType()
     compty.Number <- 43
     compty.Text <- "abc"
+    compty.Text <- compty.Text + "def"
     serverHub.functionWith4Args(1, "2", compty, 4) |> ignore
     serverHub.functionWith3Args(1, "2", 3)._doneOverload2( fun (x: obj) -> log <| x.ToString() ) |> ignore
    
@@ -60,6 +62,7 @@ let main() =
     client.SendList <- (fun xs -> log <| xs.Length.ToString())
     client.SendArray <- (fun xsa -> log <| xsa.Length.ToString())
     client.SendSeq <- (fun xss -> log <| xss.Length.ToString())
+    client.Complex <-(fun c -> log <| c.Number.ToString() + ", " + c.Text)
     client.Register(signalR.hub)
 
     signalR.hub.start onstart

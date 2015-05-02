@@ -15,6 +15,7 @@ module MyServer =
         abstract member SendList : int list -> unit
         abstract member SendArray : int[] -> unit
         abstract member SendSeq : int seq -> unit
+        abstract member Complex : ComplexObject -> unit
 
     [<HubName("myServerHub")>]
     type MyHub() = 
@@ -25,6 +26,7 @@ module MyServer =
             this.Clients.Caller.SendList([1; 2; 3])
             this.Clients.Caller.SendArray([|1; 2; 3; 4|])
             this.Clients.Caller.SendSeq( Seq.ofList [ 1; 2; 3; 4; 5 ])
+            this.Clients.Caller.Complex(ComplexObject(Number=42,Text="Test"))
             "Message sent"
 
         member this.functionWith3Args(x : int, y: string, z: int) = 
@@ -32,7 +34,7 @@ module MyServer =
             42.0 
 
         member this.functionWith4Args(xx : int, y: string, z: ComplexObject, a: int) = 
-            this.Clients.Caller.FiveArgsTupled("abc"+y, xx, 42.12345, a.ToString(), z.Number)
+            this.Clients.Caller.FiveArgsTupled(y+"|"+z.Text, xx, 42.12345, a.ToString(), z.Number)
             xx * a + z.Number
 
         override this.OnConnected() =

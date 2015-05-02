@@ -50,17 +50,18 @@ type ClientProvider (config: TypeProviderConfig) as this =
             let typeDef = ProvidedTypeDefinition(asm, typeNs, newTypeName, Some typeof<obj>) 
 
             let setMi = typeof<JsonObject>.GetMethod("Set")
+            let getMi = typeof<JsonObject>.GetMethod("Get")
 
             typeDef.AddMembers(l |> List.map (fun (pName, pTy) -> 
                 let pType = getTy pTy
                 let set = setMi.MakeGenericMethod(pType)
+                let get = getMi.MakeGenericMethod(pType)
                 let p = ProvidedProperty(pName, 
                                         pType,
                                         SetterCode = (fun [ob; newVal] ->
                                             Expr.Call(set, [ob; Expr.Value(pName); newVal])),
                                         GetterCode = (fun [ob] -> 
-                                            <@@ () @@>))
-                                            // <@@ JsonObject.Get (%%ob: obj) pName @@>))
+                                            Expr.Call(get, [ob; Expr.Value(pName)])))
                 p))
             typeDef.AddMember <| ProvidedConstructor([], InvokeCode =  (fun args -> <@@ JsonObject.Create() @@>))
 
