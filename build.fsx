@@ -35,12 +35,22 @@ Target "BuildDemo" (fun _ ->
         |> Log "DemoBuild-Output: "
 )
 
+Target "GenerateJSDemo" (fun _ ->
+    //FileUtils.cd "demo/BuildScript/bin/Release"
+    let result = ExecProcess (fun p ->
+        p.WorkingDirectory <- @"demo\BuildScript\bin\Release\"
+        p.FileName <- @"demo\BuildScript\bin\Release\BuildScript.exe") (System.TimeSpan.FromMinutes 1.)
+        
+    if result <> 0 then failwith "Failed to generate JS"
+)
+
 Target "Default" (fun _ -> ())
 
 "Clean"
     ==> "Build"
     ==> "Copy"
     ==> "BuildDemo"
+    ==> "GenerateJSDemo"
     ==> "Default"
 
 
