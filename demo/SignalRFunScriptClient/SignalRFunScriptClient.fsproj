@@ -59,7 +59,7 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="SignalRProvider">
-      <HintPath>..\..\SignalRProvider\bin\Debug\SignalRProvider.dll</HintPath>
+      <HintPath>..\..\build\SignalRProvider.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -67,7 +67,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="FSharp.Core" />
     <Reference Include="SignalRProviderRuntime">
-      <HintPath>..\..\SignalRProviderRuntime\bin\Debug\SignalRProviderRuntime.dll</HintPath>
+      <HintPath>..\..\build\SignalRProviderRuntime.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
