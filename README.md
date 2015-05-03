@@ -8,6 +8,8 @@ from F# to JavaScript with FunScript.
 
 It more or less gives the effect of generating TypeScript definitions for the hubs [for which tools exist](http://www.scottlogic.com/blog/2014/08/08/signalr-typed.html), and generating FunScript bindings for these definitions, except updating smoothly on a simple build of the server DLL.
 
+![Build status](https://ci.appveyor.com/api/projects/status/j5a2xggfjserpfpt?svg=true)
+
 How it works
 ============
 
