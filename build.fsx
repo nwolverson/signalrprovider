@@ -2,6 +2,8 @@
 
 open Fake
 
+RestorePackages()
+
 let output = [
     "FunScript.TypeScript.Binding.jquery.dll";
     "FunScript.TypeScript.Binding.lib.dll";
