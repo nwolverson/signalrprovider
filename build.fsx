@@ -2,7 +2,12 @@
 
 open Fake
 
-RestorePackages()
+Target "RestorePackages" (fun _ ->
+    "SignalRProvider.sln" 
+        |> RestoreMSSolutionPackages (fun p -> { p with OutputPath = "packages" })
+    "demo/SignalRProviderTest.sln" 
+        |> RestoreMSSolutionPackages (fun p -> { p with OutputPath = "demo/packages" })
+)
 
 let output = [
     "FunScript.TypeScript.Binding.jquery.dll";
@@ -49,11 +54,18 @@ Target "GenerateJSDemo" (fun _ ->
 Target "Default" (fun _ -> ())
 
 "Clean"
+    ==> "RestorePackages"
     ==> "Build"
-    ==> "Copy"
-    ==> "BuildDemo"
-    ==> "GenerateJSDemo"
-    ==> "Default"
 
+"Build" ==> "Copy"
+
+"RestorePackages" ==> "BuildDemo"
+"Copy" ==> "BuildDemo"
+
+"BuildDemo" ==> "GenerateJSDemo"
+
+
+"Build" ==> "Default"
+"GenerateJSDemo" ==> "Default"
 
 RunTargetOrDefault "Default"
