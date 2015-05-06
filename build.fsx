@@ -38,7 +38,7 @@ Target "Copy" (fun _ ->
 
 Target "BuildDemo" (fun _ ->
     !! "demo/**/*.sln"
-        |> MSBuildReleaseExt null [("LCID","1033")] "Build" 
+        |> MSBuildWithDefaults "Build" 
         |> Log "DemoBuild-Output: "
 )
 

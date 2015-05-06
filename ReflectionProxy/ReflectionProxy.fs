@@ -21,9 +21,10 @@ type ReflectionProxy() =
             with
                 | _ -> Assembly.LoadFrom <| Path.Combine(Path.GetDirectoryName ass, name + ".dll")
 
-        AppDomain.CurrentDomain.add_AssemblyResolve (ResolveEventHandler resolve)
+        let resolveHandler = ResolveEventHandler resolve
+        AppDomain.CurrentDomain.add_AssemblyResolve resolveHandler
         let res = Assembly.LoadFrom ass
-        AppDomain.CurrentDomain.remove_AssemblyResolve (ResolveEventHandler resolve)
+        AppDomain.CurrentDomain.remove_AssemblyResolve resolveHandler
         res
 
     let getMethodType (hubName : string) (mi: MethodInfo) =
