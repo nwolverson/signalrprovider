@@ -90,6 +90,13 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SignalRServer\SignalRServer.fsproj">
+      <Name>SignalRServer</Name>
+      <Project>{b79d6d3c-23fa-4d27-aead-dc2391000220}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -120,10 +127,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <ProjectReference Include="..\SignalRServer\SignalRServer.fsproj">
-      <Project>B79D6D3C-23FA-4D27-AEAD-DC2391000220</Project>
-      <Name>SignalRServer</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>
