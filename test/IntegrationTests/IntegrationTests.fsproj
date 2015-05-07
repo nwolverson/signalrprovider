@@ -98,8 +98,8 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Server\ZServer.fsproj">
-      <Name>ZServer</Name>
+    <ProjectReference Include="..\Server\Server.fsproj">
+      <Name>Server</Name>
       <Project>{d9cbc7f1-e458-43f6-9013-a95133e6803f}</Project>
       <Private>True</Private>
     </ProjectReference>

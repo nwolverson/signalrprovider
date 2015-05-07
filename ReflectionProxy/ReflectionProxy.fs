@@ -121,16 +121,18 @@ type ReflectionProxy() =
             | _ -> None)
 
     member this.GetDefinedTypes(assemblies : string seq)  = 
-        let asm = assemblies 
-        if (not (Seq.isEmpty asm)) then
-            let clientAsm = loadAssemblyBytes (Seq.last asm)
-            let types = clientAsm.ExportedTypes |> List.ofSeq
-            let hubTypes = types |> findHubs
-            let hubTypeInfo = hubTypes |> List.map makeHubType
-            let clientHubDef name =
-                findClientHubDefs types hubTypes name |> List.map (fun t -> (name, makeHubType t))
-            let clientHubDefs = List.map fst hubTypeInfo |> List.collect clientHubDef
-            (hubTypeInfo, clientHubDefs)
-        else 
+        assemblies |> Seq.fold (fun (hubTypeInfoState, clientHubDefsState) asm ->
+            try
+                let clientAsm = loadAssemblyBytes asm
+                let types = clientAsm.ExportedTypes |> List.ofSeq
+                let hubTypes = types |> findHubs
+                let hubTypeInfo = hubTypes |> List.map makeHubType
+                let clientHubDef name =
+                    findClientHubDefs types hubTypes name |> List.map (fun t -> (name, makeHubType t))
+                let clientHubDefs = List.map fst hubTypeInfo |> List.collect clientHubDef
+                (hubTypeInfo @ hubTypeInfoState, clientHubDefs @ clientHubDefsState)
+            // some assemblies will load but have exported types which don't
+            with _ -> (hubTypeInfoState, clientHubDefsState)
+            )
             ([], [])
             

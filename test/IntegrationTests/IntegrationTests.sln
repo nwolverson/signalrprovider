@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntegrationTests", "IntegrationTests.fsproj", "{29D9B98A-718C-436D-BD4F-4CB562ACE914}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ZServer", "..\Server\ZServer.fsproj", "{D9CBC7F1-E458-43F6-9013-A95133E6803F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Server", "..\Server\Server.fsproj", "{D9CBC7F1-E458-43F6-9013-A95133E6803F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{CCF05343-9848-4A8C-ACB1-C62603AC3B93}"
 	ProjectSection(SolutionItems) = preProject
