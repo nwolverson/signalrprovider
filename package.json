@@ -1,0 +1,26 @@
+{
+    "name": "signalrprovider",
+    "version": "1.0.0",
+    "description": "signalrprovider\r ===============",
+    "main": "",
+    "directories": {
+        "test": "test"
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+        "phantomjs": "^1.9.16", 
+        "mocha-phantomjs": "^3.5.3",
+        "mocha": "^2.2.4"
+    },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nwolverson/signalrprovider.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nwolverson/signalrprovider/issues"
+  },
+  "homepage": "https://github.com/nwolverson/signalrprovider"
+}

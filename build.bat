@@ -1,6 +1,9 @@
 @echo off
 cls
 ".nuget\NuGet.exe" "Install" "FAKE" "-OutputDirectory" "packages" "-ExcludeVersion"
+".nuget\NuGet.exe" "Install" "FAKE.IIS" "-OutputDirectory" "packages" "-ExcludeVersion"
+
+call npm install
 
 SET TARGET="Default"
 

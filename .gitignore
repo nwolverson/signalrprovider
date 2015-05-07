@@ -17,3 +17,4 @@ bld/
 packages/*
 **/packages/*
 
+node_modules/*
